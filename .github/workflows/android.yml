@@ -28,11 +28,15 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      # Das Android-SDK ist auf dem Runner vorinstalliert; hier nur Lizenzen und benötigte Pakete sicherstellen
+      # Das Android-SDK ist auf dem Runner vorinstalliert (sdkmanager liegt dort, aber nicht im PATH)
       - name: Android-SDK vorbereiten
         run: |
-          yes | sdkmanager --licenses > /dev/null || true
-          sdkmanager "platforms;android-36" "build-tools;36.0.0"
+          SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          SDKM="$(ls -d "$SDK"/cmdline-tools/*/bin/sdkmanager | sort -V | tail -1)"
+          echo "SDK=$SDK  sdkmanager=$SDKM"
+          echo "ANDROID_HOME=$SDK" >> "$GITHUB_ENV"
+          yes | "$SDKM" --sdk_root="$SDK" --licenses > /dev/null || true
+          "$SDKM" --sdk_root="$SDK" "platforms;android-36" "build-tools;36.0.0"
 
       - name: Web-App bauen und mit Android synchronisieren
         run: |
