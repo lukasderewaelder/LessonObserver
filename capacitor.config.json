@@ -1,0 +1,8 @@
+{
+  "appId": "de.lessonobserver.mitarbeit",
+  "appName": "Mitarbeit",
+  "webDir": "www",
+  "android": {
+    "allowMixedContent": false
+  }
+}
