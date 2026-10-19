@@ -1,4 +1,5 @@
 {
+  "id": "./",
   "name": "Mitarbeit",
   "short_name": "Mitarbeit",
   "description": "Mitarbeit im Unterricht erfassen und auswerten",
@@ -6,11 +7,17 @@
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "categories": ["education", "productivity"],
   "background_color": "#EDF0F4",
-  "theme_color": "#25406B",
+  "theme_color": "#2F5FD0",
   "icons": [
     {"src": "icon-192.png", "sizes": "192x192", "type": "image/png"},
     {"src": "icon-512.png", "sizes": "512x512", "type": "image/png"},
     {"src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ],
+  "shortcuts": [
+    {"name": "Nachtragen", "short_name": "Nachtragen", "url": "./index.html?a=nachtragen", "icons": [{"src": "icon-192.png", "sizes": "192x192", "type": "image/png"}]},
+    {"name": "Zufallsauswahl", "short_name": "Zufall", "url": "./index.html?a=zufall", "icons": [{"src": "icon-192.png", "sizes": "192x192", "type": "image/png"}]}
   ]
 }
