@@ -27,16 +27,16 @@ Clara Schmidt 2x+ ★ F
 15.09. Ben −
 ```
 
-Wertungen: `++` `+` `○`/`o`/`0` `−` `−−`, Noten `1`–`5`, Wörter wie „gut“, `★`/`J` = Joker-Punkt, `F` = fehlt, `S` = spät, Kürzel oder Name der eigenen Marker, `2x+` = zweimal.
+Wertungen: `++` `+` `○`/`o`/`0` `−` `−−`, Noten `1`–`5`, Wörter wie „gut“, `★`/`J` = Joker-Punkt, Kürzel oder Name der eigenen Marker, `2x+` = zweimal.
 
 **Summen je Person** – Zahlen aus einer Strichliste oder Excel (Tabulator oder Semikolon):
 
 ```
-Name;++;+;○;−;−−;Joker;Fehlt;Spät
+Name;++;+;○;−;−−;Joker
 Anna Beispiel;3;5;2;1;0;4;1;0
 ```
 
-Ohne Kopfzeile gilt die Reihenfolge `++ · + · ○ · − · −− · Joker-Punkte · Fehlt · Spät`, danach die eigenen Marker.
+Ohne Kopfzeile gilt die Reihenfolge `++ · + · ○ · − · −− · Joker-Punkte`, danach die eigenen Marker.
 
 **Datum:** Steht in einer Zeile ein Datum (`12.09.2026`, `12.09.`, `2026-09-12`), gilt dieses. Eine Zeile nur mit Datum gilt für alle Zeilen darunter. Alles ohne Datum **bleibt ohne Datum** (optional lässt sich oben ein gemeinsames Datum eintragen). Einträge ohne Datum zählen in der Auswertung bei „Alles“ und in der Joker-Zählung; das Datum kann im Verlauf der Person (Kalender-Symbol am Eintrag) jederzeit nachgetragen oder geändert werden.
 
@@ -48,8 +48,15 @@ Die Dateien aus dem Hauptverzeichnis auf einen Webserver legen (z. B. GitHub Pag
 
 ## Bedienung am PC
 
-Auf großen Bildschirmen passt sich das Layout an (mehr Kacheln pro Zeile, Stempelleiste in einer Zeile, Mehr zweispaltig). Tastenkürzel im Tab „Unterricht“: `1`–`5` Wertung (`++` bis `−−`), `J` Joker, `F` fehlt, `S` spät, `Z` Zufallsauswahl, `Esc` beendet den Stempelmodus.
+Auf großen Bildschirmen passt sich das Layout an (mehr Kacheln pro Zeile, Stempelleiste in einer Zeile, Mehr zweispaltig). Tastenkürzel im Tab „Unterricht“: `1`–`5` Wertung (`++` bis `−−`), `J` Joker, `Z` Zufallsauswahl, `/` Namen suchen, `Esc` beendet den Stempelmodus bzw. leert die Auswahl.
 
 ## Kursfarben
 
 Jeder Kurs hat eine Farbe (Kurs bearbeiten → Farbe). Sie erscheint als Balken im Kopf, am aktiven Tab und in den Kurslisten.
+
+## Namen suchen und mehrere auf einmal wählen (PC)
+
+- **Unterricht:** Über der Kachelliste steht ein Suchfeld (Taste `/`). Tippe einen Namensanfang, wähle per `Enter` oder Klick aus dem Drop-Down (Pfeiltasten gehen auch; `▾` zeigt alle Namen). Mehrere Namen auf einmal: nacheinander wählen oder `Anna, Ben, Clara` tippen/einfügen und `Enter`. Auch `Strg`/`Shift` + Klick auf eine Kachel wählt aus. Bei gewählten Personen gilt die nächste Wertung (Stempelleiste oder Tasten `1`–`5`, `J`) sofort für alle, danach wird die Auswahl geleert. „Rückgängig“ macht es für alle zusammen rückgängig.
+- **Nachtragen:** Gleiches Suchfeld. Die Wertungsknöpfe darunter („Für Auswahl“) zählen für alle gewählten Personen: **Linksklick +1, Rechtsklick −1**. Das gilt auch für die einzelnen Felder der Tabelle (am Handy: lang drücken für −1).
+
+„Fehlt“ und „Spät“ gibt es nicht mehr; alte Einträge dieser Art werden beim Laden entfernt.
