@@ -1,6 +1,33 @@
 # LessonObserver – „Mitarbeit“
 
-Mitarbeit im Unterricht erfassen und auswerten. Web-App (`index.html`), läuft auch offline. Eine Android-APK ist aktuell nicht Teil des Projekts (sie steht noch in der Git-Historie).
+Mitarbeit im Unterricht erfassen und auswerten. Web-App (`index.html`), läuft auch offline – und zusätzlich als Android-APK (Capacitor, siehe unten) aus derselben Codebasis.
+
+## Android-APK (LessonObserver)
+
+Die APK ist ein Capacitor-Rahmen um dieselbe `index.html`; alles liegt lokal im App-Paket, es werden keine Daten übertragen. Mindestens Android 10.
+
+**Installieren:** Die Datei `LessonObserver.apk` vom neuesten [Release](../../releases) aufs Gerät laden und öffnen (einmalig „Installation aus dieser Quelle“ erlauben). Neue Versionen einfach über die alte installieren – die Daten bleiben erhalten (Voraussetzung: gleiche Signatur, siehe unten).
+
+**Daten aus der Web-App übernehmen:** Die APK hat einen eigenen Speicher und sieht die Daten der installierten Web-App nicht. In der Web-App **Mehr → Sicherung speichern**, die Datei aufs Gerät legen und in der APK **Mehr → Sicherung laden** wählen.
+
+**Unterschiede zur Web-App:** „Speichern / Teilen“ (PDF, CSV, Sicherung) öffnet das Android-Teilen-Fenster (Drive, Dateien, E-Mail …). „Vorschau öffnen“ nutzt ebenfalls dieses Fenster („Öffnen mit“). Service Worker, Versionsprüfung und „Ziehen zum Aktualisieren“ entfallen; Updates kommen über eine neue APK. Beim Deinstallieren gehen Daten **und** automatische Sicherungen verloren – vorher eine Sicherung speichern.
+
+### Bauen und veröffentlichen (für Entwickler:innen)
+
+Das Bauen übernimmt GitHub Actions (`.github/workflows/android.yml`): Tag `v1.0.0` pushen → signierte APK hängt am Release. Manuell: Actions → „Android APK“ → Run workflow (Artifact).
+
+**Einmalig einrichten:** Keystore erzeugen (gut aufbewahren – geht er verloren, lassen sich installierte Apps nicht mehr aktualisieren; niemals ins Repo einchecken):
+
+```
+keytool -genkeypair -v -keystore lessonobserver.jks -alias lessonobserver -keyalg RSA -keysize 2048 -validity 10000
+base64 -w0 lessonobserver.jks    # Ausgabe als Secret ANDROID_KEYSTORE_BASE64 hinterlegen
+```
+
+Repository → Settings → Secrets and variables → Actions: `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS` (z. B. `lessonobserver`), `ANDROID_KEY_PASSWORD`. Ohne diese Secrets baut der Workflow nur eine Debug-APK als Artifact.
+
+**Lokal:** Node 22, JDK 21, Android SDK. `npm ci && npm run sync`, danach `android/` in Android Studio öffnen oder `cd android && ./gradlew assembleDebug`. `www/` und die synchronisierten Web-Dateien unter `android/` werden aus dem Repo-Root erzeugt (`scripts/build-web.mjs`) und nicht eingecheckt – nach Änderungen an `index.html` also `npm run sync`.
+
+**Code-Weichen:** In `index.html` erkennt `NATIVE` die App (`Capacitor.isNativePlatform()`) und schaltet Teilen (`nativeShare`), Zurück-Taste, Bildschirm-anlassen sowie Service Worker/Update-Check um. Die Web-Version bleibt unverändert.
 
 ## Daten und Speicherung
 
