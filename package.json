@@ -1,0 +1,20 @@
+{
+  "name": "mitarbeit",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Mitarbeit – Unterrichtsbeobachtung (Web-App und Android-App)",
+  "scripts": {
+    "sync": "cp node_modules/@capacitor/core/dist/capacitor.js www/capacitor.js && cap sync android",
+    "apk": "npm run sync && cd android && ./gradlew assembleDebug"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/core": "^8.5.3",
+    "@capacitor/filesystem": "^8.1.5",
+    "@capacitor/share": "^8.0.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.5.3"
+  }
+}
