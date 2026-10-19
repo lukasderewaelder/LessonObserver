@@ -5,7 +5,16 @@ Mitarbeit im Unterricht erfassen und auswerten. Web-App (`index.html`), läuft a
 ## Daten und Speicherung
 
 - Alle Daten bleiben **lokal im Browser des Geräts** (`localStorage`). Es wird nichts übertragen.
-- Sicherungen macht man selbst unter **Mehr → Sicherung speichern** und lädt sie dort wieder.
+- **Automatische Sicherungen:** Nach jeder Änderung legt die App einen Stand in IndexedDB ab (die letzten 20 plus je einer pro Tag der letzten 14 Tage). Unter Mehr → Automatische Sicherungen lässt sich ein Stand wiederherstellen. Ist der normale Speicher einmal leer, holt die App den letzten Stand automatisch zurück. „Alle Daten löschen“ entfernt auch diese Sicherungen.
+- Diese Sicherungen liegen im selben Browser-Speicher: Löschst du die Website-Daten oder deinstallierst die App, sind sie weg. Deshalb **Mehr → Sicherung speichern** (Teilen → Drive, Dateien, E-Mail); eine Erinnerung erscheint nach 7 Tagen.
+
+## Android
+
+- **Als App installieren:** Chrome zeigt unter Mehr (und einmalig im Tab „Unterricht“) einen Knopf „Installieren“. Die installierte App hat ein eigenes Symbol, läuft im Vollbild und auch ohne Netz. Beim langen Drücken auf das Symbol gibt es die Kurzbefehle „Nachtragen“ und „Zufallsauswahl“.
+- **Zurück-Taste:** schließt zuerst Fenster und Auswahl, dann geht es zurück zu „Unterricht“, erst dann verlässt sie die App.
+- **Mehrere Namen:** Kachel gedrückt halten, weitere antippen, Wertung wählen – sie gilt für alle.
+- **Vibration** beim Stempeln und **Bildschirm anlassen** lassen sich unter Mehr → Anzeige ein- und ausschalten.
+- **Neue Version:** Ist eine neue Version da, erscheint „Neue Version geladen – Neu laden“.
 
 ## Daten nachtragen
 
@@ -42,7 +51,7 @@ Ohne Kopfzeile gilt die Reihenfolge `++ · + · ○ · − · −− · Joker-Pu
 
 Unbekannte Namen werden auf Wunsch als neue Schüler:innen angelegt. Importierte Einträge haben keine Uhrzeit.
 
-## Als Web-App auf dem Handy
+## Als Web-App auf dem Handy (ohne Installation)
 
 Die Dateien aus dem Hauptverzeichnis auf einen Webserver legen (z. B. GitHub Pages, Quelle: Branch `main`, Ordner `/ (root)`), im Browser öffnen und „Zum Startbildschirm hinzufügen“ wählen.
 

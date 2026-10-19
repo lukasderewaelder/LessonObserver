@@ -32,6 +32,8 @@
 .r2{--c:var(--r2)} .r1{--c:var(--r1)} .r0{--c:var(--r0)} .rm1{--c:var(--rm1)} .rm2{--c:var(--rm2)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{-webkit-text-size-adjust:100%}
+html,body{overscroll-behavior-y:contain}
+.view,.sheet{overscroll-behavior:contain}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.35 var(--ui);-webkit-font-smoothing:antialiased;touch-action:manipulation}
 body.overlay{overflow:hidden}
 button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
@@ -46,9 +48,9 @@ h2,h3{margin:0}
 .ct{font:600 20px/1.15 var(--ui);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .cbtn .ct::after{content:"";display:inline-block;width:7px;height:7px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg) translateY(-3px);margin-left:9px}
 .cs{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
-.datechip{grid-area:d;display:inline-flex;align-items:center;height:36px;padding:0 12px;border:1.5px solid var(--line);border-radius:999px;background:var(--surface);font-weight:600;font-size:14px;white-space:nowrap}
+.datechip{grid-area:d;display:inline-flex;align-items:center;min-height:36px;padding:0 12px;border:1.5px solid var(--line);border-radius:999px;background:var(--surface);font-weight:600;font-size:14px;white-space:nowrap}
 .datechip.alt{border-color:var(--joker);background:var(--joker-soft)}
-.pill-btn{height:38px;padding:0 12px;border-radius:999px;background:var(--brand);color:var(--on-brand);font-weight:600;font-size:14px}
+.pill-btn{min-height:38px;padding:0 12px;border-radius:999px;background:var(--brand);color:var(--on-brand);font-weight:600;font-size:14px}
 .tabs{grid-area:t;display:grid;grid-template-columns:repeat(4,1fr);background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:2px;gap:2px}
 .tab{padding:6px 2px;border-radius:8px;font-size:14px;font-weight:600;color:var(--muted)}
 .tab[aria-selected=true]{background:var(--cc);color:#fff}
@@ -77,7 +79,7 @@ select{padding-right:6px}
 /* Kacheln */
 .grid{display:grid;grid-template-columns:repeat(var(--cols,2),minmax(0,1fr));gap:6px;--tmin:200px}
 .grid.c3{--tmin:160px}
-.tile{position:relative;display:flex;flex-direction:column;gap:2px;padding:6px 8px 6px 9px;text-align:left;background:var(--surface);border:1px solid var(--line);border-left:6px solid var(--tc,var(--line));border-radius:8px;transition:transform .08s}
+.tile{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;position:relative;display:flex;flex-direction:column;gap:2px;padding:6px 8px 6px 9px;text-align:left;background:var(--surface);border:1px solid var(--line);border-left:6px solid var(--tc,var(--line));border-radius:8px;transition:transform .08s}
 .tile:active{transform:scale(.97)}
 .fn{display:block;font:600 18px/1.15 var(--ui);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .frow{display:flex;align-items:center;justify-content:space-between;gap:6px;min-width:0}
@@ -120,7 +122,7 @@ body.nodock #dock{display:none}
 .stamp.on{outline:3px solid var(--ink);outline-offset:2px}
 .xrow{display:flex;gap:6px;overflow-x:auto;padding:6px 2px 2px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .xrow::-webkit-scrollbar{display:none}
-.xs{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 12px;border-radius:999px;border:1.5px solid var(--line);background:var(--surface2);font-weight:600;font-size:15px;white-space:nowrap}
+.xs{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;min-height:34px;padding:0 12px;border-radius:999px;border:1.5px solid var(--line);background:var(--surface2);font-weight:600;font-size:15px;white-space:nowrap}
 .xs.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .xs.joker{border-color:var(--joker)}
 .xs.joker.on{background:var(--joker);color:var(--on-joker)}
@@ -163,15 +165,15 @@ body.view-open #toast{top:auto;bottom:calc(16px + env(safe-area-inset-bottom))}
 .act:disabled{opacity:.45}
 .act small{font-weight:500;opacity:.85}
 .today{display:flex;gap:6px;flex-wrap:wrap;min-height:30px;align-items:center}
-.tchip{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 4px 0 8px;border-radius:7px;background:var(--c,var(--surface2));color:#fff;font-weight:700;font-size:13px}
+.tchip{display:inline-flex;align-items:center;gap:6px;min-height:30px;padding:0 4px 0 8px;border-radius:7px;background:var(--c,var(--surface2));color:#fff;font-weight:700;font-size:13px}
 .tchip.jk{background:var(--joker);color:var(--on-joker)}
 .tchip.tg,.tchip.st{background:var(--surface2);color:var(--ink);border:1px solid var(--line)}
 .tchip i{font-style:normal;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;border-radius:5px;opacity:.85;font-size:15px}
 textarea{width:100%;resize:vertical;min-height:62px}
-.btn{display:inline-flex;align-items:center;justify-content:center;height:44px;padding:0 16px;border-radius:10px;border:1.5px solid var(--line);background:var(--surface);font-weight:600;font-size:16px}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 16px;border-radius:10px;border:1.5px solid var(--line);background:var(--surface);font-weight:600;font-size:16px}
 .btn.primary{background:var(--brand);border-color:var(--brand);color:var(--on-brand)}
 .btn.danger{color:var(--danger);border-color:var(--danger)}
-.btn.sm{height:36px;padding:0 12px;font-size:14px}
+.btn.sm{min-height:36px;padding:0 12px;font-size:14px}
 .btn.block{width:100%}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .linkbtn{font-weight:600;color:var(--brand);padding:10px 0}
@@ -203,7 +205,7 @@ details.box>*:last-child{margin-bottom:12px}
 /* Auswertung */
 .rng{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;scrollbar-width:none}
 .rng::-webkit-scrollbar{display:none}
-.rng button{flex:0 0 auto;height:36px;padding:0 14px;border-radius:999px;border:1.5px solid var(--line);background:var(--surface);font-weight:600;font-size:14px}
+.rng button{flex:0 0 auto;min-height:36px;padding:0 14px;border-radius:999px;border:1.5px solid var(--line);background:var(--surface);font-weight:600;font-size:14px}
 .rng button[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .dates{display:flex;gap:8px;align-items:center;margin:2px 0 10px;font-size:14px;color:var(--muted)}
 .dates input{flex:1}
@@ -352,13 +354,13 @@ input[type=checkbox].sw:checked::after{transform:translateX(20px)}
   .ct{font-size:16.5px}
   .cbtn .ct::after{width:6px;height:6px;margin-left:7px}
   .cs{font-size:11.5px}
-  .datechip{height:30px;padding:0 10px;font-size:13px}
+  .datechip{min-height:30px;padding:0 10px;font-size:13px}
   .tabs{padding:2px;border-radius:9px}
   .tab{padding:5px 2px;font-size:13px;border-radius:7px}
   #main{padding:6px 7px calc(var(--dockh) + 12px + env(safe-area-inset-bottom))}
   body.nodock #main{padding-bottom:calc(12px + env(safe-area-inset-bottom))}
   .tbar{gap:6px;margin-bottom:6px}
-  .tbar .btn{height:34px;padding:0 10px;font-size:13px}
+  .tbar .btn{min-height:34px;padding:0 10px;font-size:13px}
   .tbar select{padding:5px 6px}
   .seg button{min-width:32px;height:28px;font-size:13px}
   .banner{padding:6px 9px;margin-bottom:6px;font-size:12.5px}
@@ -381,7 +383,7 @@ input[type=checkbox].sw:checked::after{transform:translateX(20px)}
   .stamp{height:38px;border-radius:10px;font-size:21px}
   .stamps{gap:5px}
   .xrow{padding-top:5px;gap:5px}
-  .xs{height:30px;padding:0 10px;font-size:13px;gap:5px}
+  .xs{min-height:30px;padding:0 10px;font-size:13px;gap:5px}
   .xs svg{width:15px;height:15px}
   #toast{font-size:13.5px;padding:8px 10px 8px 14px}
   .sheet{padding:12px 12px calc(14px + env(safe-area-inset-bottom));border-radius:16px 16px 0 0}
@@ -396,10 +398,10 @@ input[type=checkbox].sw:checked::after{transform:translateX(20px)}
   .rbtn small{font-size:9.5px}
   .jline{font-size:13px;margin-bottom:6px}
   .rchip,.act{min-height:34px;padding:0 11px;font-size:13.5px}
-  .tchip{height:26px;font-size:12px}
+  .tchip{min-height:26px;font-size:12px}
   textarea{min-height:52px}
-  .btn{height:38px;padding:0 13px;font-size:14.5px;border-radius:9px}
-  .btn.sm{height:32px;padding:0 10px;font-size:13px}
+  .btn{min-height:38px;padding:0 13px;font-size:14.5px;border-radius:9px}
+  .btn.sm{min-height:32px;padding:0 10px;font-size:13px}
   .crow{padding:8px 11px}
   .crow b{font-size:16px}
   .vhead{padding:calc(env(safe-area-inset-top) + 6px) 10px 6px}
@@ -414,7 +416,7 @@ input[type=checkbox].sw:checked::after{transform:translateX(20px)}
   .stat b{font-size:19px}
   .stat span{font-size:11.5px}
   .sum,.kpis{gap:6px;margin:0 0 8px}
-  .rng button{height:30px;padding:0 11px;font-size:13px}
+  .rng button{min-height:30px;padding:0 11px;font-size:13px}
   .rng{padding-bottom:6px}
   table.tbl{font-size:13px}
   .tbl th,.tbl td{padding:4px 6px}
@@ -496,7 +498,7 @@ var reduceMotion=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: 
 var storageOK=true;
 function defaults(){
   return {v:1,courses:[],events:[],settings:{
-    activeCourse:null,cols:3,closeAfter:true,sort:'name',
+    activeCourse:null,cols:3,closeAfter:true,haptics:true,wake:false,installSnooze:null,sort:'name',
     jokerReasons:['Fleiß','Hilfsbereitschaft','Gute Idee','Besondere Leistung'],
     tags:[{id:'t1',name:'HA fehlt',short:'HA'},{id:'t2',name:'Material fehlt',short:'Mat'},{id:'t3',name:'Störung',short:'St'}],
     lastBackup:null,backupSnooze:null
@@ -518,12 +520,103 @@ function normalize(s){
   s.v=1;
   return s;
 }
+var hadRaw=false;
 function load(){
-  try{var raw=localStorage.getItem(KEY);if(raw) return normalize(JSON.parse(raw));}catch(e){storageOK=false;}
+  try{var raw=localStorage.getItem(KEY);if(raw){hadRaw=true;return normalize(JSON.parse(raw));}}catch(e){storageOK=false;}
   return defaults();
 }
 function save(){
   try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){storageOK=false;}
+  snapSoon();
+}
+/* Automatische Sicherungen: nach jeder Änderung ein Schnappschuss in IndexedDB (die letzten 20 plus je einer pro Tag der letzten 14 Tage) */
+var idbP=null,snapTimer=null,lastSnapKey='';
+function idb(){
+  if(idbP)return idbP;
+  idbP=new Promise(function(res,rej){
+    try{
+      var r=indexedDB.open('mitarbeit-backup',1);
+      r.onupgradeneeded=function(){r.result.createObjectStore('snaps',{keyPath:'ts'});};
+      r.onsuccess=function(){res(r.result);};
+      r.onerror=function(){rej(r.error);};
+    }catch(e){rej(e);}
+  });
+  return idbP;
+}
+function snapOp(mode,fn){
+  return idb().then(function(db){return new Promise(function(res,rej){
+    var tx=db.transaction('snaps',mode),out=fn(tx.objectStore('snaps'));
+    tx.oncomplete=function(){res(out&&'result' in out?out.result:undefined);};
+    tx.onerror=function(){rej(tx.error);};
+  });});
+}
+function snapList(){return snapOp('readonly',function(st){return st.getAll();}).then(function(a){return (a||[]).sort(function(x,y){return y.ts-x.ts;});});}
+function snapClear(){return snapOp('readwrite',function(st){return st.clear();}).catch(function(){});}
+function snapSoon(){clearTimeout(snapTimer);snapTimer=setTimeout(function(){snapNow();},1200);}
+function snapNow(force){
+  var key=JSON.stringify([state.courses,state.events]);
+  if(!force&&key===lastSnapKey)return Promise.resolve();
+  if(!state.courses.length&&!state.events.length)return Promise.resolve();
+  lastSnapKey=key;
+  var rec={ts:Date.now(),json:JSON.stringify(state),nc:state.courses.length,ne:state.events.length};
+  return snapOp('readwrite',function(st){return st.put(rec);}).then(snapPrune).catch(function(){});
+}
+function snapPrune(){
+  return snapList().then(function(list){
+    var keep={},days={};
+    list.forEach(function(r,i){
+      if(i<20)keep[r.ts]=1;
+      var d=ymd(new Date(r.ts));
+      if(!days[d]){days[d]=1;if(Object.keys(days).length<=14)keep[r.ts]=1;}
+    });
+    var del=list.filter(function(r){return !keep[r.ts];});
+    if(!del.length)return;
+    return snapOp('readwrite',function(st){del.forEach(function(r){st.delete(r.ts);});});
+  });
+}
+/* Speicher des Browsers weg, aber Schnappschüsse da: automatisch zurückholen */
+function snapRestoreIfLost(){
+  if(hadRaw)return;
+  snapList().then(function(list){
+    var r=list[0];
+    if(!r||state.courses.length||state.events.length)return;
+    state=normalize(JSON.parse(r.json));save();render();
+    toast('Daten aus der automatischen Sicherung wiederhergestellt');
+  },function(){});
+}
+function snapRestore(ts){
+  snapList().then(function(list){
+    var r=list.filter(function(x){return x.ts===+ts;})[0];if(!r)return;
+    var when=fmtDate(ymd(new Date(r.ts)),true)+' '+p2(new Date(r.ts).getHours())+':'+p2(new Date(r.ts).getMinutes());
+    if(!confirm('Stand vom '+when+' ('+r.nc+' Kurs(e), '+r.ne+' Einträge) wiederherstellen? Der aktuelle Stand wird vorher gesichert.'))return;
+    snapNow(true).then(function(){
+      state=normalize(JSON.parse(r.json));lastSnapKey='';save();
+      ui.stamp=null;ui.sel=[];ui.view=null;ui.draft=null;ui.pick=null;renderView();closeSheet();render();toast('Sicherung vom '+when+' geladen');
+    });
+  });
+}
+function snapListHTML(){
+  var box=$('#snapList');if(!box)return;
+  snapList().then(function(list){
+    box=$('#snapList');if(!box)return;
+    box.innerHTML=list.length?list.slice(0,12).map(function(r){
+      var d=new Date(r.ts);
+      return '<div class="setrow"><span>'+fmtDate(ymd(d),true)+', '+p2(d.getHours())+':'+p2(d.getMinutes())+' Uhr<small>'+r.nc+' Kurs(e), '+r.ne+' Einträge</small></span><button class="btn sm" data-act="snapRestore" data-ts="'+r.ts+'">Laden</button></div>';
+    }).join(''):'<p class="hint">Noch keine automatische Sicherung.</p>';
+  },function(){box.innerHTML='<p class="hint">Automatische Sicherungen sind in diesem Browser nicht verfügbar.</p>';});
+  if(navigator.storage&&navigator.storage.persisted)navigator.storage.persisted().then(function(p){
+    var e=$('#persistInfo');if(e)e.textContent=p?'Speicher: dauerhaft geschützt (Chrome löscht ihn nicht von selbst).':'Speicher: nicht garantiert – bei Platzmangel kann der Browser ihn löschen. Installiere die App und speichere Sicherungen als Datei.';
+  });
+}
+/* Vibration (nur Android) */
+function buzz(ms){if(state.settings.haptics!==false&&navigator.vibrate){try{navigator.vibrate(ms||12);}catch(e){}}}
+/* Bildschirm anlassen */
+var wakeLock=null;
+function wakeSync(){
+  if(!navigator.wakeLock)return;
+  if(state.settings.wake&&!document.hidden){
+    if(!wakeLock)navigator.wakeLock.request('screen').then(function(l){wakeLock=l;l.addEventListener('release',function(){wakeLock=null;});},function(){});
+  }else if(wakeLock){wakeLock.release().catch(function(){});wakeLock=null;}
 }
 var state=load();
 try{if(navigator.storage&&navigator.storage.persist) navigator.storage.persist();}catch(e){}
@@ -578,13 +671,13 @@ function mkEvent(sid,type,extra){
   if(bd)ev.bd=1;
   return Object.assign(ev,extra||{});
 }
-function toast(msg,undo,gold){
+function toast(msg,undo,gold,label,ms){
   var t=$('#toast');
   t.className=gold?'show gold':'show';
-  t.innerHTML='<span>'+esc(msg)+'</span>'+(undo?'<button data-act="undo">Rückgängig</button>':'');
+  t.innerHTML='<span>'+esc(msg)+'</span>'+(undo?'<button data-act="undo">'+esc(label||'Rückgängig')+'</button>':'');
   toast.undo=undo||null;
   clearTimeout(toast.timer);
-  toast.timer=setTimeout(function(){t.className='';toast.undo=null;},undo?5500:2800);
+  toast.timer=setTimeout(function(){t.className='';toast.undo=null;},ms||(undo?5500:2800));
 }
 function toastUndoIds(msg,ids,gold){
   toast(msg,function(){state.events=state.events.filter(function(e){return ids.indexOf(e.id)<0;});save();afterChange();},gold);
@@ -593,7 +686,7 @@ function jInfoNow(c,sid){return jokerInfo(evsOf(c.id,sid),c.jokerEvery);}
 
 function doStamp(key,sid,opt){
   opt=opt||{};
-  var TU=opt.quiet?function(){}:toastUndoIds;
+  var TU=opt.quiet?function(){}:function(){buzz();toastUndoIds.apply(null,arguments);};
   var c=course(),s=stu(sid);
   if(!c||!s)return false;
   var rt=RATINGS.filter(function(r){return r.k===key;})[0];
@@ -688,7 +781,7 @@ function applySel(k){
   if(!ids.length)return;
   ids.forEach(function(sid){if(doStamp(k,sid,opt))ok++;});
   var evIds=state.events.slice(n0).map(function(e){return e.id;});
-  ui.sel=[];ui.cq.class='';ui.copen.class=false;ui.focusCombo=true;
+  ui.sel=[];ui.cq.class='';ui.copen.class=false;ui.focusCombo=true;buzz(25);
   toastUndoIds(ok+(ok===1?' Person: ':' Personen: ')+stampLabel(k),evIds);
   afterChange();
 }
@@ -752,7 +845,7 @@ function backupDue(){
   if(s.backupSnooze&&now<s.backupSnooze)return null;
   if(!s.lastBackup)return 'noch nie';
   var days=Math.floor((now-s.lastBackup)/864e5);
-  return days>=14?'vor '+days+' Tagen':null;
+  return days>=7?'vor '+days+' Tagen':null;
 }
 function tileHTML(s,evs,c,d,cols){
   var day=evs.filter(function(e){return e.date===d;}).sort(function(a,b){return a.ts-b.ts;});
@@ -790,8 +883,9 @@ function classHTML(){
   var idx=idxFor(c.id),d=curDate(),cols=state.settings.cols===3?3:2;
   var html='';
   if(!storageOK)html+='<div class="banner warn"><b>Speichern nicht möglich.</b><span>Der Browser erlaubt hier keinen lokalen Speicher (z. B. privater Modus). Alle Eingaben gehen beim Schließen verloren – sichere sie deshalb regelmäßig unter „Mehr“.</span></div>';
+  if(installEvt&&!isStandalone()&&!(state.settings.installSnooze&&Date.now()<state.settings.installSnooze))html+='<div class="banner"><span><b>Als App installieren:</b> eigenes Symbol, Vollbild, läuft auch offline.</span><div class="row"><button class="btn sm primary" data-act="install">Installieren</button><button class="btn sm" data-act="installLater">Später</button></div></div>';
   var due=backupDue();
-  if(due)html+='<div class="banner"><span>Letzte Sicherung: <b>'+due+'</b>. Bitte sichern – Safari kann Webseiten-Daten löschen.</span><div class="row"><button class="btn sm primary" data-act="backupNow">Jetzt sichern</button><button class="btn sm" data-act="snooze">Später</button></div></div>';
+  if(due)html+='<div class="banner"><span>Letzte Sicherung: <b>'+due+'</b>. Bitte als Datei sichern – die automatischen Sicherungen liegen im selben Browser-Speicher.</span><div class="row"><button class="btn sm primary" data-act="backupNow">Jetzt sichern</button><button class="btn sm" data-act="snooze">Später</button></div></div>';
   if(d!==todayStr())html+='<div class="banner"><span>'+(d?'Neue Einträge gelten für <b>'+fmtDate(d,true)+'</b>.':'<b>Nachtragen:</b> Neue Einträge bekommen kein Datum.')+'</span><button class="btn sm primary" data-act="dset" data-m="today">Zurück zu heute</button></div>';
   html+='<div class="tbar"><label class="sel"><select data-bind="sort" aria-label="Sortierung">'+
     [['name','Nachname'],['first','Vorname'],['long','Länger nicht bewertet']].map(function(o){return '<option value="'+o[0]+'"'+(state.settings.sort===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('')+
@@ -924,7 +1018,9 @@ function moreHTML(){
   var s=state.settings;
   var html='<div class="cols2"><div class="sect"><h3>Anzeige</h3>'+
     '<div class="setrow"><span>Kacheln pro Reihe<small>Am PC bestimmt die Zahl die Kachelgröße.</small></span><div class="seg"><button data-act="cols" data-n="2" aria-pressed="'+(s.cols!==3)+'">2</button><button data-act="cols" data-n="3" aria-pressed="'+(s.cols===3)+'">3</button></div></div>'+
-    '<label class="setrow"><span>Fenster nach einer Aktion schließen<small>Schnellster Ablauf: Kachel, Bewertung, fertig.</small></span><input type="checkbox" class="sw" data-bind="closeAfter"'+(s.closeAfter?' checked':'')+'></label></div>';
+    '<label class="setrow"><span>Fenster nach einer Aktion schließen<small>Schnellster Ablauf: Kachel, Bewertung, fertig.</small></span><input type="checkbox" class="sw" data-bind="closeAfter"'+(s.closeAfter?' checked':'')+'></label>'+
+    (navigator.vibrate?'<label class="setrow"><span>Vibration beim Stempeln<small>Kurzes Feedback, keine Töne.</small></span><input type="checkbox" class="sw" data-bind="haptics"'+(s.haptics!==false?' checked':'')+'></label>':'')+
+    (navigator.wakeLock?'<label class="setrow"><span>Bildschirm anlassen<small>Das Display geht nicht aus, solange die App offen ist.</small></span><input type="checkbox" class="sw" data-bind="wake"'+(s.wake?' checked':'')+'></label>':'')+'</div>';
   html+='<div class="sect"><h3>Gründe für Joker-Punkte</h3><p class="hint">Erscheinen als Schnellauswahl in der Kachel und in der Stempelleiste.</p>'+
     s.jokerReasons.map(function(r,i){return '<div class="listrow"><input class="inp" data-bind="reason" data-i="'+i+'" value="'+esc(r)+'" placeholder="Grund" aria-label="Grund '+(i+1)+'"><button class="ico" data-act="delReason" data-i="'+i+'" aria-label="Grund entfernen">✕</button></div>';}).join('')+
     '<button class="btn sm" data-act="addReason">+ Grund hinzufügen</button></div>';
@@ -935,10 +1031,16 @@ function moreHTML(){
     '<div class="row" style="margin-bottom:8px"><button class="btn" data-act="openNachtrag" style="flex:1">Daten nachtragen</button><button class="btn" data-act="openImport" style="flex:1">Text einfügen</button></div>'+
     '<div class="row"><button class="btn primary" data-act="backupNow">Sicherung speichern</button><button class="btn" data-act="backupLoad">Sicherung laden</button></div>'+
     '<div class="row" style="margin-top:8px"><button class="btn danger sm" data-act="wipe">Alle Daten löschen</button></div></div>';
+  html+='<div class="sect"><h3>App</h3>'+
+    (isStandalone()?'<div class="setrow"><span>Als App installiert<small>Läuft im Vollbild und auch ohne Netz.</small></span></div>':
+     installEvt?'<div class="setrow"><span>Als App installieren<small>Eigenes Symbol, Vollbild, funktioniert offline.</small></span><button class="btn sm primary" data-act="install">Installieren</button></div>':
+     '<p class="hint">Chrome-Menü ⋮ → „App installieren“ (oder „Zum Startbildschirm hinzufügen“), dann läuft die Seite wie eine App.</p>')+'</div>';
+  html+='<div class="sect"><h3>Automatische Sicherungen</h3><p class="hint">Nach jeder Änderung speichert die App einen Stand (die letzten 20 plus je einer pro Tag der letzten 14 Tage). <span id="persistInfo"></span></p><div id="snapList"><p class="hint">Lade …</p></div></div>';
   html+='<div class="sect"><details class="box"><summary>Hinweise zur Nutzung auf Android</summary>'+
     '<p class="hint">Alle Daten bleiben im Browser dieses Geräts, es wird nichts übertragen.</p>'+
-    '<p class="hint">Über das Chrome-Menü → „Zum Startbildschirm hinzufügen“ lässt sich die Seite wie eine App ablegen und funktioniert dann auch offline.</p>'+
-    '<p class="hint">Löschst du die Website-Daten des Browsers, sind auch die Mitarbeits-Daten weg. Speichere deshalb regelmäßig eine Sicherung.</p></details></div>';
+    '<p class="hint">Mehrere Namen: eine Kachel gedrückt halten, weitere antippen, dann die Wertung wählen – sie gilt für alle. „Leeren“ oder die Zurück-Taste beendet die Auswahl.</p>'+
+    '<p class="hint">Die Zurück-Taste schließt zuerst Fenster und Auswahl, dann geht es zurück zu „Unterricht“ und erst dann aus der App.</p>'+
+    '<p class="hint">Löschst du die Website-Daten des Browsers oder deinstallierst die App, sind auch die Mitarbeits-Daten und die automatischen Sicherungen weg. Speichere deshalb regelmäßig eine Sicherung als Datei (Teilen → Drive, Dateien, E-Mail).</p></details></div>';
   html+='<div class="sect"><details class="box"><summary>Hinweise zur Nutzung auf dem iPhone</summary>'+
     '<p class="hint">Alle Daten bleiben im Browser dieses Geräts, es wird nichts übertragen.</p>'+
     '<p class="hint">Safari kann gespeicherte Webseiten-Daten löschen, wenn lange nichts geöffnet wurde. Speichere deshalb regelmäßig eine Sicherung (Teilen → In Dateien sichern).</p>'+
@@ -947,9 +1049,12 @@ function moreHTML(){
 }
 
 /* ───────── Rendern ───────── */
+var installEvt=null;
+var isStandalone=function(){return (window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true;};
 function renderMain(){
   var h=ui.tab==='class'?classHTML():ui.tab==='eval'?evalHTML():ui.tab==='courses'?coursesHTML():moreHTML();
   $('#main').innerHTML=h;
+  if(ui.tab==='more')snapListHTML();
   if(ui.tab==='class'){comboRender('class');if(ui.focusCombo){var ci=$('.cin[data-ctx="class"]');if(ci&&ci.offsetParent)ci.focus();ui.focusCombo=false;}}
 }
 function render(){renderHeader();renderMain();renderDock();}
@@ -1374,6 +1479,7 @@ function ntMarkSel(){
   Array.prototype.forEach.call(document.querySelectorAll('.nt tbody tr'),function(tr){tr.classList.toggle('picked',ui.nt.sel.indexOf(tr.dataset.sid)>=0);});
 }
 function ntSetCell(sid,k,d){
+  buzz(8);
   var o=ui.nt,m=o.counts[sid]||(o.counts[sid]={}),n=Math.max(0,Math.min(MAXN,(m[k]||0)+d));
   if(n)m[k]=n;else delete m[k];
   var b=document.querySelector('.nc[data-sid="'+sid+'"][data-k="'+k+'"]');
@@ -1580,7 +1686,8 @@ var A={
   editCourse:function(el){editCourse(el.dataset.id);},
   tile:function(el,e){
     var sid=el.dataset.sid;
-    if(e&&(e.ctrlKey||e.metaKey||e.shiftKey)){comboToggle('class',sid);return;}
+    if(lp.fired){lp.fired=false;return;}
+    if((e&&(e.ctrlKey||e.metaKey||e.shiftKey))||ui.sel.length){comboToggle('class',sid);return;}
     if(ui.stamp){if(doStamp(ui.stamp,sid,{reason:ui.stampReason}))flash(sid);}
     else openSheet({type:'student',sid:sid});
   },
@@ -1685,18 +1792,36 @@ var A={
   backupNow:backupNow,
   backupLoad:function(){$('#fileIn').click();},
   snooze:function(){state.settings.backupSnooze=Date.now()+7*864e5;save();render();},
+  install:function(){
+    if(!installEvt)return;
+    var ev=installEvt;installEvt=null;ev.prompt();
+    ev.userChoice.then(function(r){if(r.outcome!=='accepted')toast('Installation abgebrochen');render();},function(){});
+  },
+  installLater:function(){state.settings.installSnooze=Date.now()+14*864e5;save();render();},
+  snapRestore:function(el){snapRestore(el.dataset.ts);},
   wipe:function(){
-    if(!confirm('Wirklich ALLE Kurse, Schüler:innen und Einträge auf diesem Gerät löschen?'))return;
+    if(!confirm('Wirklich ALLE Kurse, Schüler:innen und Einträge auf diesem Gerät löschen (auch die automatischen Sicherungen)?'))return;
     if(!confirm('Letzte Rückfrage: Das lässt sich nicht rückgängig machen. Alles löschen?'))return;
-    state=defaults();save();ui.stamp=null;ui.tab='class';ui.view=null;renderView();closeSheet();render();toast('Alle Daten gelöscht');
+    state=defaults();lastSnapKey='';snapClear();save();ui.stamp=null;ui.sel=[];ui.tab='class';ui.view=null;renderView();closeSheet();render();toast('Alle Daten gelöscht');
   }
 };
 document.addEventListener('click',function(e){
   var el=e.target.closest('[data-act]');if(!el)return;
   var h=A[el.dataset.act];if(h){if(el.disabled)return;h(el,e);}
 });
+/* Kachel gedrückt halten (Touch): Namen für die Mehrfachauswahl wählen */
+var lp={t:null,fired:false,x:0,y:0};
+document.addEventListener('pointerdown',function(e){
+  var t=e.target.closest&&e.target.closest('.tile');
+  if(!t||e.pointerType==='mouse'||ui.sheet||ui.view)return;
+  lp.fired=false;lp.x=e.clientX;lp.y=e.clientY;clearTimeout(lp.t);
+  lp.t=setTimeout(function(){lp.fired=true;buzz(20);comboToggle('class',t.dataset.sid);},450);
+});
+document.addEventListener('pointermove',function(e){if(lp.t&&(Math.abs(e.clientX-lp.x)>10||Math.abs(e.clientY-lp.y)>10)){clearTimeout(lp.t);lp.t=null;}});
+['pointerup','pointercancel','pointerleave'].forEach(function(n){document.addEventListener(n,function(){clearTimeout(lp.t);lp.t=null;},true);});
 /* Rechtsklick (am Handy: langes Drücken) nimmt einen Eintrag weg */
 document.addEventListener('contextmenu',function(e){
+  if(e.target.closest&&e.target.closest('.tile')){e.preventDefault();return;}
   var el=e.target.closest&&e.target.closest('[data-act=ncell],[data-act=ntApply]');
   if(!el||!ui.nt||!ui.view||ui.view.type!=='nachtrag')return;
   e.preventDefault();
@@ -1747,13 +1872,15 @@ document.addEventListener('change',function(e){
   else if(b==='impCreate'){ui.imp.create=el.checked;updateImportPreview();}
   else if(b==='stampReason'){ui.stampReason=el.value;}
   else if(b==='closeAfter'){state.settings.closeAfter=el.checked;save();}
+  else if(b==='haptics'){state.settings.haptics=el.checked;save();buzz(30);}
+  else if(b==='wake'){state.settings.wake=el.checked;save();wakeSync();}
   else if(b==='reason'){state.settings.jokerReasons[+el.dataset.i]=el.value.trim();save();renderDock();}
   else if(b==='tagname'){var t=state.settings.tags[+el.dataset.i];if(t){t.name=el.value.trim();if(!t.short)t.short=t.name.slice(0,3);save();renderDock();}}
   else if(b==='tagshort'){var t2=state.settings.tags[+el.dataset.i];if(t2){t2.short=el.value.trim();save();}}
   else if(b==='rfrom'){ui.range.from=el.value;renderMain();}
   else if(b==='rto'){ui.range.to=el.value;renderMain();}
 });
-document.addEventListener('visibilitychange',function(){if(!document.hidden&&!ui.view&&!ui.sheet)render();});
+document.addEventListener('visibilitychange',function(){wakeSync();if(!document.hidden&&!ui.view&&!ui.sheet)render();});
 window.addEventListener('resize',function(){if(dockVisible())document.documentElement.style.setProperty('--dockh',$('#dock').offsetHeight+'px');});
 
 /* Handy: Kopf- und Stempelleiste fahren beim Hinunterscrollen ein und beim Hinaufscrollen wieder aus */
@@ -1776,8 +1903,46 @@ window.addEventListener('scroll',function(){
   });
 },{passive:true});
 
+/* Zurück-Taste (Android): erst Fenster und Auswahl schließen, dann zu „Unterricht“, erst dann die App verlassen */
+function handleBack(){
+  if(ui.sheet){closeSheet();return true;}
+  if(ui.view){
+    var lose=(ui.view.type==='nachtrag'&&ui.nt&&ntTotal())||(ui.view.type==='import'&&ui.imp&&String(ui.imp.text||'').trim());
+    if(lose&&!confirm('Eingaben verwerfen?'))return true;
+    closeView();return true;
+  }
+  if(ui.sel.length){selClear('class');return true;}
+  if(ui.stamp){A.stampOff();return true;}
+  if(ui.tab!=='class'){ui.tab='class';showBars();render();window.scrollTo(0,0);return true;}
+  return false;
+}
+try{history.replaceState({m:0},'');history.pushState({m:1},'');}catch(e){}
+window.addEventListener('popstate',function(e){
+  if(!e.state||e.state.m!==0)return;
+  if(handleBack()){try{history.pushState({m:1},'');}catch(x){}}
+  else history.back();
+});
+/* Installation als App */
+window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();installEvt=e;if(ui.tab==='more'||ui.tab==='class')renderMain();});
+window.addEventListener('appinstalled',function(){installEvt=null;toast('App installiert');render();});
+/* Kurzbefehle vom App-Symbol (?a=nachtragen | zufall) */
+(function(){
+  var a=(new URLSearchParams(location.search)).get('a');
+  if(!a)return;
+  try{history.replaceState({m:1},'',location.pathname);}catch(e){}
+  if(a==='nachtragen')openNachtrag();else if(a==='zufall'&&dockVisible())startPick();
+})();
+wakeSync();
+snapRestoreIfLost();
+if(hadRaw)snapNow();
+
 render();
 if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)){
+  var hadCtl=!!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener('controllerchange',function(){
+    if(hadCtl)toast('Neue Version geladen',function(){location.reload();},false,'Neu laden',20000);
+    hadCtl=true;
+  });
   window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});
 }
 })();
