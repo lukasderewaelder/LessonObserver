@@ -33,7 +33,9 @@ Anna Beispiel;3;5;2;1;0;4;1;0
 
 Ohne Kopfzeile gilt die Reihenfolge `++ · + · ○ · − · −− · Joker-Punkte · Fehlt · Spät`, danach die eigenen Marker.
 
-**Datum:** Steht in einer Zeile ein Datum (`12.09.2026`, `12.09.`, `2026-09-12`), gilt dieses. Eine Zeile nur mit Datum gilt für alle Zeilen darunter. Alles ohne Datum bekommt das oben eingestellte Datum, voreingestellt ist das **heutige Datum**.
+**Datum:** Steht in einer Zeile ein Datum (`12.09.2026`, `12.09.`, `2026-09-12`), gilt dieses. Eine Zeile nur mit Datum gilt für alle Zeilen darunter. Alles ohne Datum **bleibt ohne Datum** (optional lässt sich oben ein gemeinsames Datum eintragen). Einträge ohne Datum zählen in der Auswertung bei „Alles“ und in der Joker-Zählung; das Datum kann im Verlauf der Person (Kalender-Symbol am Eintrag) jederzeit nachgetragen oder geändert werden.
+
+**Neue Einträge im Unterricht** bekommen automatisch das aktuelle Datum (oder das im Kopf gewählte Datum) und lassen sich im Verlauf ebenfalls nachträglich ändern.
 
 Unbekannte Namen werden auf Wunsch als neue Schüler:innen angelegt. Importierte Einträge haben keine Uhrzeit.
 

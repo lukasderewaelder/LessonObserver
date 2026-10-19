@@ -235,6 +235,8 @@ table.tbl{border-collapse:separate;border-spacing:0;width:100%;font-size:14px}
 .ev .chip{flex:0 0 auto;min-width:30px;height:26px}
 .ev .tx{flex:1;min-width:0;font-size:15px}
 .ev .tx small{display:block;color:var(--muted);font-size:12.5px}
+.ev .dt{position:relative;display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;color:var(--muted);border-radius:8px;cursor:pointer}
+.ev .dt input{position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:16px}
 .ev button{width:36px;height:36px;color:var(--muted);font-size:16px;border-radius:8px}
 
 /* Zufall */
@@ -300,7 +302,7 @@ var p2=function(n){return String(n).padStart(2,'0');};
 var ymd=function(d){return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate());};
 var todayStr=function(){return ymd(new Date());};
 var WD=['So','Mo','Di','Mi','Do','Fr','Sa'];
-function fmtDate(s,long){var d=new Date(s+'T12:00:00');return WD[d.getDay()]+' '+p2(d.getDate())+'.'+p2(d.getMonth()+1)+'.'+(long?d.getFullYear():'');}
+function fmtDate(s,long){if(!s)return 'Ohne Datum';var d=new Date(s+'T12:00:00');return WD[d.getDay()]+' '+p2(d.getDate())+'.'+p2(d.getMonth()+1)+'.'+(long?d.getFullYear():'');}
 function addDays(s,n){var d=new Date(s+'T12:00:00');d.setDate(d.getDate()+n);return ymd(d);}
 function fmtNum(x,dec){return x==null?'–':x.toFixed(dec==null?1:dec).replace('.',',');}
 var reduceMotion=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -399,7 +401,7 @@ function jokerInfo(evs,every){
 function stats(evs,lo,hi){
   var o={n:0,sum:0,dist:[0,0,0,0,0],absent:0,late:0,tags:{},jok:0,red:0,avg:null};
   evs.forEach(function(e){
-    if(e.date<lo||e.date>hi)return;
+    if(e.date?(e.date<lo||e.date>hi):!(lo==='0000-00-00'&&hi==='9999-99-99'))return;
     if(e.type==='rate'){o.n++;o.sum+=3-e.val;o.dist[2-e.val]++;}
     else if(e.type==='absent')o.absent++;
     else if(e.type==='late')o.late++;
@@ -485,6 +487,15 @@ function doStamp(key,sid,opt){
   return false;
 }
 function flash(sid){ui.flash=sid;afterChange();ui.flash=null;}
+function setEventDate(id,val){
+  var e=state.events.filter(function(x){return x.id===id;})[0];
+  if(!e||(e.date||'')===val)return;
+  var old={date:e.date,ts:e.ts,bd:e.bd};
+  e.date=val;e.bd=1;
+  e.ts=(val?new Date(val+'T12:00:00').getTime():0)+(seq++%40000)*1000;
+  save();afterChange();
+  toast(val?'Datum geändert: '+fmtDate(val,true):'Datum entfernt',function(){e.date=old.date;e.ts=old.ts;if(old.bd)e.bd=old.bd;else delete e.bd;save();afterChange();});
+}
 function removeEvent(id){
   var i=state.events.findIndex(function(e){return e.id===id;});
   if(i<0)return;
@@ -679,6 +690,8 @@ function evalHTML(){
         '<td>'+r.st.n+'</td><td>'+dist+'</td><td>'+r.jk.pts+'</td><td>'+(r.jk.avail||'–')+'</td><td>'+(r.st.absent||'–')+'</td><td>'+(r.st.late||'–')+'</td>'+
         tags.map(function(t){return '<td>'+(r.st.tags[t.id]||'–')+'</td>';}).join('')+'</tr>';
     }).join('')+'</tbody></table></div>';
+  var und=state.events.filter(function(e){return e.cid===c.id&&!e.date;}).length;
+  if(und)html+='<p class="hint" style="margin-top:8px">'+und+' Einträge ohne Datum zählen nur bei „Alles“. Das Datum lässt sich im Verlauf der Person nachtragen.</p>';
   html+='<p class="hint" style="margin-top:8px">Joker-Punkte und Joker zeigen immer den Gesamtstand des Kurses, alle anderen Spalten gelten für den gewählten Zeitraum.</p>';
   html+='<div class="row" style="margin-top:6px"><button class="btn" data-act="exportEval">Tabelle als CSV</button><button class="btn" data-act="exportLog">Protokoll als CSV</button></div>';
   return html;
@@ -833,7 +846,7 @@ function studentView(sid){
   groups.forEach(function(g){
     html+='<div class="dh">'+fmtDate(g.date,true)+'</div>'+g.list.map(function(e){
       var x=evText(e),time=e.bd?'':' <small>'+p2(new Date(e.ts).getHours())+':'+p2(new Date(e.ts).getMinutes())+' Uhr</small>';
-      return '<div class="ev">'+x.chip+'<div class="tx">'+x.t+(e.type==='joker'?'':'')+time+'</div><button data-act="delev" data-id="'+e.id+'" aria-label="Eintrag löschen">✕</button></div>';
+      return '<div class="ev">'+x.chip+'<div class="tx">'+x.t+time+'</div><label class="dt" aria-label="Datum ändern"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="width:18px;height:18px"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><input type="date" value="'+esc(e.date)+'" data-bind="evdate" data-id="'+e.id+'"></label><button data-act="delev" data-id="'+e.id+'" aria-label="Eintrag löschen">✕</button></div>';
     }).join('');
   });
   return html+'</div>';
@@ -930,7 +943,7 @@ function findDate(line,defDate){
     rest=line.replace(m[0],m[1]+' ');
     if(m[4])y=m[4].length===2?2000+(+m[4]):+m[4];
     else{
-      y=+defDate.slice(0,4);
+      y=+(defDate||todayStr()).slice(0,4);
       if(ymd(new Date(y,mo-1,d))>todayStr())y--;
     }
   }
@@ -1032,7 +1045,7 @@ function pushVal(rows,sid,date,v,n){
   for(var i=0;i<n;i++)rows.push(Object.assign({},ev));
 }
 function buildImport(o,c){
-  var tags=state.settings.tags,defDate=o.date||todayStr(),curD=defDate,rows=[],probs=[],lines=0,rs=makeResolver(c,o.create);
+  var tags=state.settings.tags,defDate=o.date||'',curD=defDate,rows=[],probs=[],lines=0,rs=makeResolver(c,o.create);
   var cols=null;
   String(o.text||'').split(/\r?\n/).forEach(function(raw,ln){
     var line=raw.trim();if(!line)return;
@@ -1084,17 +1097,17 @@ function importPreview(){
   if(!c)return {html:'',n:0};
   var r=buildImport(o,c),n=r.rows.length;
   if(!String(o.text||'').trim())return {html:'<p class="hint">Füge oben Daten ein – hier erscheint dann die Vorschau.</p>',n:0};
-  var cnt={},sids={},dmin='9999-99-99',dmax='0000-00-00';
+  var undated=0,cnt={},sids={},dmin='9999-99-99',dmax='0000-00-00';
   r.rows.forEach(function(e){
     var k=e.type==='rate'?'r'+e.val:e.type==='tag'?'tag:'+e.tn:e.type;
     cnt[k]=(cnt[k]||0)+(e.type==='joker'?e.n:1);sids[e.sid]=1;
-    if(e.date<dmin)dmin=e.date;if(e.date>dmax)dmax=e.date;
+    if(!e.date)undated++;else{if(e.date<dmin)dmin=e.date;if(e.date>dmax)dmax=e.date;}
   });
   var lab=[[ 'r2','++'],['r1','+'],['r0','○'],['r-1','−'],['r-2','−−'],['joker','★'],['redeem','Joker eingelöst'],['absent','fehlt'],['late','spät']];
   var parts=lab.filter(function(l){return cnt[l[0]];}).map(function(l){return '<b>'+cnt[l[0]]+'</b>× '+l[1];});
   Object.keys(cnt).forEach(function(k){if(k.indexOf('tag:')===0)parts.push('<b>'+cnt[k]+'</b>× '+esc(k.slice(4)));});
   var html='<div class="banner'+(n?'':' warn')+'" style="margin-top:14px"><span>'+
-    (n?'<b>'+n+'</b> Einträge für <b>'+Object.keys(sids).length+'</b> Schüler:in(nen) erkannt'+(r.added.length?', dabei <b>'+r.added.length+'</b> neu anlegen':'')+'.<br>'+parts.join(' · ')+'<br>Zeitraum: '+fmtDate(dmin,true)+(dmax!==dmin?' bis '+fmtDate(dmax,true):''):'Noch nichts erkannt.')+'</span></div>';
+    (n?'<b>'+n+'</b> Einträge für <b>'+Object.keys(sids).length+'</b> Schüler:in(nen) erkannt'+(r.added.length?', dabei <b>'+r.added.length+'</b> neu anlegen':'')+'.<br>'+parts.join(' · ')+'<br>Datum: '+(dmin<=dmax?fmtDate(dmin,true)+(dmax!==dmin?' bis '+fmtDate(dmax,true):'')+(undated?' · '+undated+' ohne Datum':''):'alle ohne Datum'):'Noch nichts erkannt.')+'</span></div>';
   if(r.added.length)html+='<p class="hint">Neu: '+r.added.slice(0,12).map(function(s){return esc(fullName(s));}).join(', ')+(r.added.length>12?' …':'')+'</p>';
   if(r.probs.length)html+='<h3>Nicht übernommen ('+r.probs.length+')</h3>'+r.probs.slice(0,10).map(function(p){return '<div class="ev"><div class="tx">Zeile '+p.ln+': '+esc(p.m)+'<small>'+esc(p.t)+'</small></div></div>';}).join('')+(r.probs.length>10?'<p class="hint">… und '+(r.probs.length-10)+' weitere.</p>':'');
   return {html:html,n:n};
@@ -1113,7 +1126,7 @@ function importView(){
    '<p class="hint">Übernimm Mitarbeits-Daten, die du bisher von Hand gesammelt hast. Du kannst sie aus Excel, einer Notiz oder einer Nachricht einfügen.</p>'+
    '<label class="fld"><span>Kurs</span><select data-bind="impCourse">'+courses.map(function(c){return '<option value="'+c.id+'"'+(c.id===o.cid?' selected':'')+'>'+esc(c.name)+'</option>';}).join('')+'</select></label>'+
    '<div class="fld"><span>Form der Daten</span><div class="seg wide" role="group" aria-label="Form der Daten" style="display:grid;grid-template-columns:1fr 1fr"><button data-act="impMode" data-m="entries" aria-pressed="'+(o.mode==='entries')+'">Einzelne Einträge</button><button data-act="impMode" data-m="sums" aria-pressed="'+(o.mode==='sums')+'">Summen je Person</button></div></div>'+
-   '<label class="fld"><span>Datum für Einträge ohne eigenes Datum</span><input class="inp" type="date" data-bind="impDate" value="'+esc(o.date)+'" style="max-width:200px"><small>Voreingestellt ist das heutige Datum. Steht in den Daten ein Datum, hat dieses Vorrang.</small></label>'+
+   '<label class="fld"><span>Datum für alle Einträge ohne eigenes Datum (optional)</span><input class="inp" type="date" data-bind="impDate" value="'+esc(o.date)+'" style="max-width:200px"><small>Leer lassen = Einträge bleiben ohne Datum. Das Datum lässt sich später im Verlauf jeder Person nachtragen.</small></label>'+
    '<label class="fld"><span>Daten</span><textarea id="impTxt" data-bind="impText" rows="9" placeholder="'+ph+'" aria-label="Daten" autocomplete="off" autocapitalize="off" spellcheck="false">'+esc(o.text)+'</textarea></label>'+
    '<label class="setrow"><span>Unbekannte Namen als neue Schüler:innen anlegen</span><input type="checkbox" class="sw" data-bind="impCreate"'+(o.create?' checked':'')+'></label>'+
    '<div id="impPrev"></div>'+
@@ -1121,12 +1134,12 @@ function importView(){
    (o.mode==='entries'?
      '<p class="hint">Eine Zeile pro Person, dahinter die Wertungen. Mehrere Wertungen sind erlaubt.</p>'+
      '<p class="hint"><b>Wertungen:</b> <code>++</code> <code>+</code> <code>○</code> oder <code>o</code> oder <code>0</code> · <code>−</code> <code>−−</code> · auch Noten <code>1</code>–<code>5</code> (1 = ++) oder Wörter wie „gut“ · <code>★</code> oder <code>J</code> = Joker-Punkt · <code>F</code> = fehlt · <code>S</code> = spät · Kürzel oder Name deiner Marker. „2x+“ bedeutet zweimal „+“.</p>'+
-     '<p class="hint"><b>Datum:</b> entweder in der Zeile (<code>12.09.2026 Anna +</code>) oder als eigene Zeile – dann gilt es für alle Zeilen darunter. Ohne Datum gilt das oben gewählte.</p>'+
+     '<p class="hint"><b>Datum:</b> entweder in der Zeile (<code>12.09.2026 Anna +</code>) oder als eigene Zeile – dann gilt es für alle Zeilen darunter. Ohne Datum bleibt das Feld leer (oder es gilt das oben gewählte Datum, falls du eins einträgst).</p>'+
      '<p class="hint"><b>Namen:</b> „Vorname Nachname“ oder „Nachname, Vorname“. Spalten aus Excel (mit Tabulator oder Semikolon) gehen auch.</p>'
     :
      '<p class="hint">Eine Zeile pro Person: Name, dann die Anzahl je Wertung. Ohne Kopfzeile gilt die Reihenfolge <code>++ · + · ○ · − · −− · Joker-Punkte · Fehlt · Spät</code>, danach deine Marker.</p>'+
      '<p class="hint">Mit Kopfzeile (z. B. <code>Name;++;+;Joker</code>) bestimmst du Spalten und Reihenfolge selbst. Leere Felder und „–“ zählen als 0.</p>'+
-     '<p class="hint">Alle Einträge bekommen das oben gewählte Datum. Du kannst auch eine Zeile nur mit einem Datum einfügen, dann gilt es für die Zeilen darunter.</p>')+
+     '<p class="hint">Die Einträge bleiben ohne Datum, außer du wählst oben eins. Du kannst auch eine Zeile nur mit einem Datum einfügen, dann gilt es für die Zeilen darunter.</p>')+
    '</details>'+
    '<div class="row" style="margin-top:16px"><button class="btn primary block big" data-act="importGo" id="impGo2" disabled>Importieren</button></div>'+
    '</div>';
@@ -1134,7 +1147,7 @@ function importView(){
 function openImport(){
   var c=course();
   if(!c){toast('Lege zuerst einen Kurs an.');return;}
-  ui.imp={cid:c.id,mode:'entries',text:'',date:todayStr(),create:true};
+  ui.imp={cid:c.id,mode:'entries',text:'',date:'',create:true};
   ui.view={type:'import'};closeSheet();el_scrollTop0();renderView();updateImportPreview();
 }
 function importGo(){
@@ -1142,7 +1155,7 @@ function importGo(){
   var r=buildImport(o,c);
   if(!r.rows.length){toast('Nichts zum Importieren erkannt.');return;}
   var i=0,evs=r.rows.map(function(e){
-    var ev={id:uid(),cid:c.id,sid:e.sid,ts:new Date(e.date+'T12:00:00').getTime()+(i++%40000)*1000,date:e.date,type:e.type,bd:1,imp:1};
+    var ev={id:uid(),cid:c.id,sid:e.sid,ts:(e.date?new Date(e.date+'T12:00:00').getTime():0)+(i++%40000)*1000,date:e.date,type:e.type,bd:1,imp:1};
     ['val','n','tag','tn','sh'].forEach(function(k){if(e[k]!=null)ev[k]=e[k];});
     return ev;
   });
@@ -1242,7 +1255,7 @@ function exportEval(){
 function exportLog(){
   var c=course();if(!c)return;
   var b=rangeBounds(),names={};c.students.forEach(function(s){names[s.id]=s;});
-  var evs=state.events.filter(function(e){return e.cid===c.id&&e.date>=b[0]&&e.date<=b[1]&&names[e.sid];}).sort(function(x,y){return x.date<y.date?-1:x.date>y.date?1:x.ts-y.ts;});
+  var evs=state.events.filter(function(e){return e.cid===c.id&&(e.date?(e.date>=b[0]&&e.date<=b[1]):(b[0]==='0000-00-00'&&b[1]==='9999-99-99'))&&names[e.sid];}).sort(function(x,y){return x.date<y.date?-1:x.date>y.date?1:x.ts-y.ts;});
   var rows=[['Datum','Uhrzeit','Nachname','Vorname','Art','Wert','Note-Äquivalent','Grund / Notiz']];
   evs.forEach(function(e){
     var s=names[e.sid],dt=e.date.split('-').reverse().join('.'),tm=e.bd?'':p2(new Date(e.ts).getHours())+':'+p2(new Date(e.ts).getMinutes());
@@ -1418,8 +1431,9 @@ document.addEventListener('change',function(e){
   if(!b)return;
   if(b==='date'){if(!el.value)return;ui.selDate=el.value===todayStr()?null:el.value;afterChange();}
   else if(b==='sort'){state.settings.sort=el.value;save();renderMain();}
+  else if(b==='evdate')setEventDate(el.dataset.id,el.value);
   else if(b==='impCourse'){ui.imp.cid=el.value;updateImportPreview();}
-  else if(b==='impDate'){ui.imp.date=el.value||todayStr();updateImportPreview();}
+  else if(b==='impDate'){ui.imp.date=el.value||'';updateImportPreview();}
   else if(b==='impCreate'){ui.imp.create=el.checked;updateImportPreview();}
   else if(b==='stampReason'){ui.stampReason=el.value;}
   else if(b==='closeAfter'){state.settings.closeAfter=el.checked;save();}
