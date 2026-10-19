@@ -69,3 +69,30 @@ Jeder Kurs hat eine Farbe (Kurs bearbeiten → Farbe). Sie erscheint als Balken 
 - **Nachtragen:** Gleiches Suchfeld. Die Wertungsknöpfe darunter („Für Auswahl“) zählen für alle gewählten Personen: **Linksklick +1, Rechtsklick −1**. Das gilt auch für die einzelnen Felder der Tabelle (am Handy: lang drücken für −1).
 
 „Fehlt“ und „Spät“ gibt es nicht mehr; alte Einträge dieser Art werden beim Laden entfernt.
+
+## Layout (Handy, Tablet, PC)
+
+- **Navigation:** Unterricht | Auswertung | Mehr. Kursverwaltung, Einstellungen, Sicherung und Halbjahre liegen unter „Mehr“. Oben links wechselt der Kurs, oben rechts das Datum für neue Einträge.
+- **Unterricht:** Suchfeld (Filter nach Namen) und Sortier-Knopf (Sortierung, Kacheln pro Reihe, Nachtragen). Standard sind 2 Kacheln pro Reihe, kompakt 3. Unten fest: fünf große Wertungsknöpfe und darunter Joker | Marker | Zufall. Wertung wählen → Schüler:in antippen.
+- **Schüler:in-Fenster:** Name, Kurs, Wertungen, Status, dazu einklappbar „Joker & Marker“ und „Bemerkung hinzufügen“, „Verlauf ansehen“, „PDF-Bericht“. Mit ‹ Zurück / Weiter › wechselst du durch die Liste.
+- **Nachtragen (Handy):** Eingabemaske: Person wählen → Datum → Wertungen mit −/+ erfassen. Am PC bleibt die Tabelle.
+- **Auswertung (Handy):** schlanke Liste (Name, Ø Tendenz, Anzahl, Verteilung). Antippen öffnet Verteilung, Verlauf, Joker/Marker, Notizen und alle Einträge. Der Zeitraumfilter (Heute, 7 Tage, 30 Tage, 1. Halbjahr, 2. Halbjahr, Alles, Zeitraum …) gilt auch für das PDF.
+- **Halbjahre** sind unter Mehr einstellbar. Vorgeschlagen wird ein Schuljahr ab 1. August; bitte an dein Bundesland anpassen.
+
+## PDF-Export
+
+In **Auswertung → PDF exportieren** (oder im Schüler:in-Fenster → PDF-Bericht):
+
+- **Schülerbericht** (A4 hoch): pro Person eigene Seiten mit Zusammenfassung, Verteilung, Verlauf, Joker/Marker, Bemerkungen und optional allen Ereignissen.
+- **Kursübersicht** (A4 quer): Tabelle aller Schüler:innen mit Anzahl, Ø Tendenz, Verteilung, Joker/Marker; Tabellenkopf auf jeder Seite.
+- **Beobachtungsprotokoll** (A4 hoch): chronologische Einträge mit Datum, Wertung und Bemerkung, optional nach Person gruppiert.
+
+Auswahl von Kurs, Personen, Zeitraum und Inhalten; danach Speichern/Teilen oder Vorschau öffnen. Das PDF entsteht **ausschließlich im Browser** (jsPDF und AutoTable liegen unter `lib/`, MIT-Lizenz); es werden keine Daten gesendet. Es funktioniert auch offline. „Ø Tendenz“ ist in jedem Bericht als Orientierung, nicht als Zeugnisnote gekennzeichnet. Zeichen, die die PDF-Schrift nicht kann (z. B. Emoji), werden durch „?“ ersetzt und dir angezeigt.
+
+## Updates
+
+- Die App lädt beim Öffnen zuerst die neueste Version aus dem Netz und nutzt nur ohne Netz (oder bei sehr langsamem Netz) die gespeicherte Kopie. Nach einer Veröffentlichung auf GitHub Pages dauert es etwa 1–10 Minuten, bis die neue Version ausgeliefert wird.
+- **Ziehen zum Aktualisieren:** Am Seitenanfang nach unten ziehen prüft sofort auf eine neue Version; gibt es eine, erscheint „Neu laden“.
+- Kommt die App aus dem Hintergrund zurück, prüft sie im Hintergrund (höchstens alle 5 Minuten) und zeigt „Neue Version verfügbar“.
+- Deine Daten bleiben bei Updates erhalten.
+- Für Entwickler:innen: Bei jeder Änderung `app-version` in `index.html` erhöhen, damit die Versionsprüfung die neue Version erkennt.
