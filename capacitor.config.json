@@ -1,0 +1,9 @@
+{
+  "appId": "de.lukasderewaelder.lessonobserver",
+  "appName": "LessonObserver",
+  "webDir": "www",
+  "backgroundColor": "#EDF0F4",
+  "android": {
+    "allowMixedContent": false
+  }
+}

@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Mitarbeit">
 <meta name="format-detection" content="telephone=no">
-<meta name="app-version" content="2026-10-19.1">
+<meta name="app-version" content="2026-10-19.2">
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#EDF0F4" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0E131B" media="(prefers-color-scheme: dark)">
@@ -693,7 +693,24 @@ function snapListHTML(){
     }).join(''):'<p class="hint">Noch keine automatische Sicherung.</p>';
   },function(){box.innerHTML='<p class="hint">Automatische Sicherungen sind in diesem Browser nicht verfügbar.</p>';});
   if(navigator.storage&&navigator.storage.persisted)navigator.storage.persisted().then(function(p){
-    var e=$('#persistInfo');if(e)e.textContent=p?'Speicher: dauerhaft geschützt (Chrome löscht ihn nicht von selbst).':'Speicher: nicht garantiert – bei Platzmangel kann der Browser ihn löschen. Installiere die App und speichere Sicherungen als Datei.';
+    var e=$('#persistInfo');if(e)e.textContent=NATIVE?'Speicher: in der App gespeichert. Beim Deinstallieren gehen Daten und Sicherungen verloren – speichere regelmäßig eine Sicherung als Datei.':p?'Speicher: dauerhaft geschützt (Chrome löscht ihn nicht von selbst).':'Speicher: nicht garantiert – bei Platzmangel kann der Browser ihn löschen. Installiere die App und speichere Sicherungen als Datei.';
+  });
+}
+/* Android-App (Capacitor): Teilen, Zurück-Taste und Wachhalten laufen über native Plugins */
+var CAP=window.Capacitor,NATIVE=!!(CAP&&CAP.isNativePlatform&&CAP.isNativePlatform());
+function plug(n){return NATIVE&&CAP.Plugins?CAP.Plugins[n]||null:null;}
+function blobB64(blob){return new Promise(function(res,rej){var fr=new FileReader();fr.onload=function(){res(String(fr.result).split(',')[1]||'');};fr.onerror=function(){rej(fr.error);};fr.readAsDataURL(blob);});}
+/* Datei in den App-Cache schreiben und das Android-Teilen-Fenster öffnen (Drive, Dateien, E-Mail, „Öffnen mit“). true = geteilt, false = abgebrochen/Fehler */
+function nativeShare(blob,name){
+  var fs=plug('Filesystem'),sh=plug('Share');
+  if(!fs||!sh){toast('Teilen ist in dieser App-Version nicht verfügbar.');return Promise.resolve(false);}
+  return blobB64(blob).then(function(b64){
+    return fs.writeFile({path:name,data:b64,directory:'CACHE'});
+  }).then(function(w){
+    return sh.share({title:name,url:w.uri,dialogTitle:name}).then(function(){return true;});
+  }).catch(function(e){
+    if(/cancel/i.test((e&&e.message)||String(e)))return false;
+    toast('Die Datei konnte nicht geteilt werden.');return false;
   });
 }
 /* Vibration (nur Android) */
@@ -701,6 +718,7 @@ function buzz(ms){if(state.settings.haptics!==false&&navigator.vibrate){try{navi
 /* Bildschirm anlassen */
 var wakeLock=null;
 function wakeSync(){
+  if(NATIVE){var ka=plug('KeepAwake');if(ka)(state.settings.wake&&!document.hidden?ka.keepAwake():ka.allowSleep()).catch(function(){});return;}
   if(!navigator.wakeLock)return;
   if(state.settings.wake&&!document.hidden){
     if(!wakeLock)navigator.wakeLock.request('screen').then(function(l){wakeLock=l;l.addEventListener('release',function(){wakeLock=null;});},function(){});
@@ -1163,7 +1181,7 @@ function moreHTML(){
     '<div class="setrow"><span>Kacheln pro Reihe<small>Am PC bestimmt die Zahl die Kachelgröße.</small></span><div class="seg"><button data-act="cols" data-n="2" aria-pressed="'+(s.cols!==3)+'">2</button><button data-act="cols" data-n="3" aria-pressed="'+(s.cols===3)+'">3</button></div></div>'+
     '<label class="setrow"><span>Fenster nach einer Aktion schließen<small>Schnellster Ablauf: Kachel, Bewertung, fertig.</small></span><input type="checkbox" class="sw" data-bind="closeAfter"'+(s.closeAfter?' checked':'')+'></label>'+
     (navigator.vibrate?'<label class="setrow"><span>Vibration beim Stempeln<small>Kurzes Feedback, keine Töne.</small></span><input type="checkbox" class="sw" data-bind="haptics"'+(s.haptics!==false?' checked':'')+'></label>':'')+
-    (navigator.wakeLock?'<label class="setrow"><span>Bildschirm anlassen<small>Das Display geht nicht aus, solange die App offen ist.</small></span><input type="checkbox" class="sw" data-bind="wake"'+(s.wake?' checked':'')+'></label>':'')+'</div>';
+    ((navigator.wakeLock||NATIVE)?'<label class="setrow"><span>Bildschirm anlassen<small>Das Display geht nicht aus, solange die App offen ist.</small></span><input type="checkbox" class="sw" data-bind="wake"'+(s.wake?' checked':'')+'></label>':'')+'</div>';
   html+='<div class="sect"><h3>Halbjahre</h3><p class="hint">Für Auswertung und PDF-Berichte. Vorgeschlagen wird ein Schuljahr ab 1. August – passe die Daten an dein Bundesland an.</p>'+
     [['1. Halbjahr','h1f','h1t',tm.h1],['2. Halbjahr','h2f','h2t',tm.h2]].map(function(t){return '<div class="termrow"><span>'+t[0]+'</span><input class="inp" type="date" data-bind="term" data-k="'+t[1]+'" value="'+t[3][0]+'" aria-label="'+t[0]+' von"><input class="inp" type="date" data-bind="term" data-k="'+t[2]+'" value="'+t[3][1]+'" aria-label="'+t[0]+' bis"></div>';}).join('')+'</div>';
   html+='<div class="sect"><h3>Gründe für Joker-Punkte</h3><p class="hint">Erscheinen als Schnellauswahl in der Kachel und in der Stempelleiste.</p>'+
@@ -1197,7 +1215,7 @@ function moreHTML(){
 var mqMobile=window.matchMedia('(max-width:699px)');
 var isMobile=function(){return mqMobile.matches;};
 var installEvt=null;
-var isStandalone=function(){return (window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true;};
+var isStandalone=function(){return NATIVE||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true;};
 function renderMain(){
   var h=ui.tab==='class'?classHTML():ui.tab==='eval'?evalHTML():moreHTML();
   $('#main').innerHTML=h;
@@ -1845,11 +1863,13 @@ function pdfGo(){
   });
 }
 function pdfDownload(r){
+  if(NATIVE){nativeShare(r.blob,r.name);return;}
   var a=document.createElement('a');a.href=r.url;a.download=r.name;document.body.appendChild(a);a.click();
   setTimeout(function(){a.remove();},1000);
 }
 function pdfShare(){
   var r=ui.pdf&&ui.pdf.res;if(!r)return;
+  if(NATIVE){nativeShare(r.blob,r.name);return;}
   try{
     var file=new File([r.blob],r.name,{type:'application/pdf'});
     if(navigator.canShare&&navigator.canShare({files:[file]})){
@@ -1908,6 +1928,7 @@ function toCSV(rows){return '﻿'+rows.map(function(r){return r.map(csvCell).joi
 var slug=function(s){return String(s).replace(/[^A-Za-z0-9ÄÖÜäöüß]+/g,'_').replace(/^_+|_+$/g,'')||'Kurs';};
 function saveFile(name,mime,text){
   var blob=new Blob([text],{type:mime});
+  if(NATIVE)return nativeShare(blob,name);
   try{
     var file=new File([blob],name,{type:mime});
     if(navigator.canShare&&navigator.canShare({files:[file]})){
@@ -2082,7 +2103,7 @@ var A={
   pdfAll:function(){ui.pdf.sel=pdfStudents().map(function(s){return s.id;});renderView();},
   pdfNone:function(){ui.pdf.sel=[];renderView();},
   pdfGo:pdfGo,pdfShare:pdfShare,
-  pdfOpenTab:function(){var r=ui.pdf&&ui.pdf.res;if(!r)return;var w=window.open(r.url,'_blank');if(!w)pdfDownload(r);},
+  pdfOpenTab:function(){var r=ui.pdf&&ui.pdf.res;if(!r)return;if(NATIVE){pdfDownload(r);return;}var w=window.open(r.url,'_blank');if(!w)pdfDownload(r);},
   /* Nachtragen */
   openNachtrag:openNachtrag,
   ntGo:ntGo,
@@ -2246,7 +2267,7 @@ function checkUpdate(manual){
   var now=Date.now();
   if(!manual&&now-lastChk<5*60000)return Promise.resolve(false);
   lastChk=now;
-  if(!/^https?:$/.test(location.protocol))return Promise.resolve(false);
+  if(NATIVE||!/^https?:$/.test(location.protocol))return Promise.resolve(false);
   if('serviceWorker' in navigator)navigator.serviceWorker.getRegistration().then(function(r){return r&&r.update();}).catch(function(){});
   return fetch('index.html',{cache:'no-store'}).then(function(r){if(!r.ok)throw new Error('http');return r.text();}).then(function(t){
     var v=appVer(t);
@@ -2259,7 +2280,7 @@ function checkUpdate(manual){
   var el=function(){if(!ind){ind=document.createElement('div');ind.id='ptr';ind.setAttribute('aria-hidden','true');ind.innerHTML='<i></i>';document.body.appendChild(ind);}return ind;};
   var reset=function(){startY=null;pull=0;if(ind&&!busy){ind.classList.remove('on','ready');ind.style.transform='';}};
   document.addEventListener('touchstart',function(e){
-    if(busy||e.touches.length!==1||ui.sheet||ui.view||window.pageYOffset>0)return;
+    if(NATIVE||busy||e.touches.length!==1||ui.sheet||ui.view||window.pageYOffset>0)return;
     if(e.target.closest&&e.target.closest('input,textarea,select,.rng,.tw,.ntw,.xrow,.pdflist,#dock,#sheetWrap'))return;
     startY=e.touches[0].clientY;startX=e.touches[0].clientX;pull=0;
   },{passive:true});
@@ -2305,6 +2326,8 @@ window.addEventListener('popstate',function(e){
   if(handleBack()){try{history.pushState({m:1},'');}catch(x){}}
   else history.back();
 });
+/* Android-App: Zurück-Taste über das App-Plugin (sonst würde die WebView-Historie zurückgehen) */
+if(plug('App'))plug('App').addListener('backButton',function(){if(!handleBack())plug('App').exitApp();});
 /* Installation als App */
 window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();installEvt=e;if(ui.tab==='more'||ui.tab==='class')renderMain();});
 window.addEventListener('appinstalled',function(){installEvt=null;toast('App installiert');render();});
@@ -2326,7 +2349,7 @@ mqMobile.addEventListener('change',function(){
   else if(ui.view&&ui.view.type==='student')renderView();
 });
 render();
-if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)){
+if(!NATIVE&&'serviceWorker' in navigator&&/^https?:$/.test(location.protocol)){
   var hadCtl=!!navigator.serviceWorker.controller;
   navigator.serviceWorker.addEventListener('controllerchange',function(){
     if(hadCtl)toast('Neue Version geladen',function(){location.reload();},false,'Neu laden',20000);
