@@ -437,6 +437,10 @@ input[type=checkbox].sw:checked::after{transform:translateX(20px)}
   .ccard .go small{font-size:12px}
   .empty{padding:30px 16px}
   .empty h2{font-size:20px}
+  #hdr,#dock{transition:transform .22s ease}
+  body.hide-hdr #hdr{transform:translateY(-100%)}
+  body.hide-dock #dock{transform:translateY(100%)}
+  body.hide-dock #toast{bottom:calc(12px + env(safe-area-inset-bottom))}
   .nt td:first-child b{font-size:13.5px}
   .nt td:first-child small{font-size:10.5px}
   .nt td:first-child{min-width:84px;padding:2px 6px}
@@ -824,6 +828,7 @@ function renderDock(){
     hint+='<button class="stop" data-act="stampOff">Beenden</button>';
   }else hint='<span class="hl idle">Stempel wählen, dann Namen tippen – oder Kachel öffnen<span class="kbd"> · Tasten: 1–5 Wertung, J Joker, Z Zufall, / Namen suchen, Esc beenden</span></span>';
   dock.className=ui.stamp&&!ui.sel.length?'armed':'';
+  if(ui.stamp||ui.sel.length)document.body.classList.remove('hide-dock');
   dock.innerHTML='<div class="dhint'+(ui.stamp||ui.sel.length?'':' idle')+'">'+hint+'</div>'+
     '<div class="dmain"><div class="stamps">'+RATINGS.map(function(r,i){return '<button class="stamp '+r.k+(ui.stamp===r.k?' on':'')+'" data-act="stamp" data-k="'+r.k+'" aria-pressed="'+(ui.stamp===r.k)+'" aria-label="'+r.name+'" title="'+r.name+' (Taste '+(i+1)+')">'+r.sym+'</button>';}).join('')+'</div>'+
     '<div class="xrow">'+
@@ -1559,7 +1564,7 @@ function importBackup(file){
 
 /* ───────── Aktionen ───────── */
 var A={
-  tab:function(el){ui.tab=el.dataset.t;if(ui.tab!=='class')ui.stamp=null;render();window.scrollTo(0,0);},
+  tab:function(el){showBars();ui.tab=el.dataset.t;if(ui.tab!=='class')ui.stamp=null;render();window.scrollTo(0,0);},
   today:function(){ui.selDate=null;afterChange();},
   dateSheet:function(){openSheet({type:'date'});},
   dset:function(el){ui.selDate=el.dataset.m==='none'?'':null;closeSheet();afterChange();},
@@ -1750,6 +1755,26 @@ document.addEventListener('change',function(e){
 });
 document.addEventListener('visibilitychange',function(){if(!document.hidden&&!ui.view&&!ui.sheet)render();});
 window.addEventListener('resize',function(){if(dockVisible())document.documentElement.style.setProperty('--dockh',$('#dock').offsetHeight+'px');});
+
+/* Handy: Kopf- und Stempelleiste fahren beim Hinunterscrollen ein und beim Hinaufscrollen wieder aus */
+var lastY=0,scrollTick=false;
+function showBars(){document.body.classList.remove('hide-hdr','hide-dock');}
+function hideBars(){
+  document.body.classList.add('hide-hdr');
+  if(!ui.stamp&&!ui.sel.length)document.body.classList.add('hide-dock');
+}
+window.addEventListener('scroll',function(){
+  if(scrollTick)return;scrollTick=true;
+  requestAnimationFrame(function(){
+    scrollTick=false;
+    if(ui.sheet||ui.view)return;
+    if(!window.matchMedia('(max-width:699px)').matches){showBars();return;}
+    var y=window.pageYOffset,dy=y-lastY,max=document.documentElement.scrollHeight-window.innerHeight;
+    if(y<=10||y>=max-4||dy<-6)showBars();
+    else if(dy>6&&y>50)hideBars();
+    if(Math.abs(dy)>3)lastY=y;
+  });
+},{passive:true});
 
 render();
 if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)){
