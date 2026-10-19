@@ -1,6 +1,6 @@
 # LessonObserver – „Mitarbeit“
 
-Mitarbeit im Unterricht erfassen und auswerten. Web-App (`www/index.html`), läuft auch offline. Eine Android-APK ist aktuell nicht Teil des Projekts (sie steht noch in der Git-Historie).
+Mitarbeit im Unterricht erfassen und auswerten. Web-App (`index.html`), läuft auch offline. Eine Android-APK ist aktuell nicht Teil des Projekts (sie steht noch in der Git-Historie).
 
 ## Daten und Speicherung
 
@@ -40,4 +40,4 @@ Unbekannte Namen werden auf Wunsch als neue Schüler:innen angelegt. Importierte
 
 ## Als Web-App auf dem Handy
 
-`www/` auf einen Webserver legen (z. B. GitHub Pages), im Browser öffnen und „Zum Startbildschirm hinzufügen“ wählen.
+Die Dateien aus dem Hauptverzeichnis auf einen Webserver legen (z. B. GitHub Pages, Quelle: Branch `main`, Ordner `/ (root)`), im Browser öffnen und „Zum Startbildschirm hinzufügen“ wählen.
