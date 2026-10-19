@@ -280,7 +280,6 @@ input[type=checkbox].sw:checked::after{transform:translateX(20px)}
 <div id="toast" role="status" aria-live="polite"></div>
 <input type="file" id="fileIn" accept=".json,application/json" hidden>
 
-<script src="capacitor.js"></script>
 <script>
 (function(){
 'use strict';
@@ -308,16 +307,7 @@ function fmtNum(x,dec){return x==null?'–':x.toFixed(dec==null?1:dec).replace('
 var reduceMotion=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /* ───────── Daten ───────── */
-var storageOK=true,dirty=false;
-var FILE='mitarbeit-daten.json';
-/* Android-App (Capacitor): Plugins werden nur dort angesprochen, im Browser bleibt alles beim Alten */
-var Cap=window.Capacitor,NATIVE=!!(Cap&&Cap.isNativePlatform&&Cap.isNativePlatform());
-var plugs={};
-function plug(n){
-  if(!NATIVE)return null;
-  if(!(n in plugs)){try{plugs[n]=Cap.registerPlugin(n);}catch(e){plugs[n]=null;}}
-  return plugs[n];
-}
+var storageOK=true;
 function defaults(){
   return {v:1,courses:[],events:[],settings:{
     activeCourse:null,cols:2,closeAfter:true,sort:'name',
@@ -344,30 +334,8 @@ function load(){
   try{var raw=localStorage.getItem(KEY);if(raw) return normalize(JSON.parse(raw));}catch(e){storageOK=false;}
   return defaults();
 }
-/* Gespeichert wird immer im Browser-Speicher; in der Android-App zusätzlich als Datei im App-Ordner,
-   damit die Daten auch erhalten bleiben, wenn der WebView-Speicher einmal geleert wird. */
-var mirrorTimer=null;
 function save(){
-  dirty=true;state.savedAt=Date.now();
   try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){storageOK=false;}
-  if(NATIVE){clearTimeout(mirrorTimer);mirrorTimer=setTimeout(mirrorNow,300);}
-}
-function mirrorNow(){
-  var f=plug('Filesystem');if(!f)return Promise.resolve();
-  clearTimeout(mirrorTimer);
-  return f.writeFile({path:FILE,data:JSON.stringify(state),directory:'DATA',encoding:'utf8'}).then(function(){storageOK=true;},function(){});
-}
-function restoreNative(){
-  var f=plug('Filesystem');if(!f)return;
-  f.readFile({path:FILE,directory:'DATA',encoding:'utf8'}).then(function(r){
-    var s=JSON.parse(r.data);
-    if(!s||!Array.isArray(s.courses)||!Array.isArray(s.events))return;
-    var empty=!state.courses.length&&!state.events.length;
-    if(dirty||(!empty&&(s.savedAt||0)<=(state.savedAt||0)))return;
-    state=normalize(s);
-    try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}
-    render();
-  },function(){if(state.courses.length||state.events.length)mirrorNow();});
 }
 var state=load();
 try{if(navigator.storage&&navigator.storage.persist) navigator.storage.persist();}catch(e){}
@@ -731,9 +699,9 @@ function moreHTML(){
     '<div class="row"><button class="btn primary" data-act="backupNow">Sicherung speichern</button><button class="btn" data-act="backupLoad">Sicherung laden</button></div>'+
     '<div class="row" style="margin-top:8px"><button class="btn danger sm" data-act="wipe">Alle Daten löschen</button></div></div>';
   html+='<div class="sect"><details class="box"><summary>Hinweise zur Nutzung auf Android</summary>'+
-    '<p class="hint">In der Android-App werden alle Daten nur auf dem Gerät gespeichert: im App-Speicher und zusätzlich als Datei im App-Ordner. Es wird nichts übertragen und nichts in die Cloud gesichert.</p>'+
-    '<p class="hint">Wird die App deinstalliert oder ihr Speicher gelöscht, sind die Daten weg. Speichere deshalb regelmäßig eine Sicherung (Teilen-Menü → Dateien, Drive, E-Mail …).</p>'+
-    '<p class="hint">Im Browser lässt sich die Seite über das Chrome-Menü → „Zum Startbildschirm hinzufügen“ ebenfalls wie eine App ablegen.</p></details></div>';
+    '<p class="hint">Alle Daten bleiben im Browser dieses Geräts, es wird nichts übertragen.</p>'+
+    '<p class="hint">Über das Chrome-Menü → „Zum Startbildschirm hinzufügen“ lässt sich die Seite wie eine App ablegen und funktioniert dann auch offline.</p>'+
+    '<p class="hint">Löschst du die Website-Daten des Browsers, sind auch die Mitarbeits-Daten weg. Speichere deshalb regelmäßig eine Sicherung.</p></details></div>';
   html+='<div class="sect"><details class="box"><summary>Hinweise zur Nutzung auf dem iPhone</summary>'+
     '<p class="hint">Alle Daten bleiben im Browser dieses Geräts, es wird nichts übertragen.</p>'+
     '<p class="hint">Safari kann gespeicherte Webseiten-Daten löschen, wenn lange nichts geöffnet wurde. Speichere deshalb regelmäßig eine Sicherung (Teilen → In Dateien sichern).</p>'+
@@ -1217,16 +1185,6 @@ function csvCell(v){v=v==null?'':String(v);return /[;"\n\r]/.test(v)?'"'+v.repla
 function toCSV(rows){return '﻿'+rows.map(function(r){return r.map(csvCell).join(';');}).join('\r\n');}
 var slug=function(s){return String(s).replace(/[^A-Za-z0-9ÄÖÜäöüß]+/g,'_').replace(/^_+|_+$/g,'')||'Kurs';};
 function saveFile(name,mime,text){
-  var fsP=plug('Filesystem'),shP=plug('Share');
-  if(fsP&&shP){
-    /* Android-App: Datei zwischenspeichern und über das Teilen-Menü ablegen (Dateien, Drive, E-Mail …) */
-    return fsP.writeFile({path:name,data:text,directory:'CACHE',encoding:'utf8'}).then(function(r){
-      return shP.share({title:name,url:r.uri,dialogTitle:name});
-    }).then(function(){return true;},function(e){
-      if(!/cancel/i.test(String(e&&(e.message||e))))toast('Datei konnte nicht gespeichert werden.');
-      return false;
-    });
-  }
   var blob=new Blob([text],{type:mime});
   try{
     var file=new File([blob],name,{type:mime});
@@ -1443,25 +1401,11 @@ document.addEventListener('change',function(e){
   else if(b==='rfrom'){ui.range.from=el.value;renderMain();}
   else if(b==='rto'){ui.range.to=el.value;renderMain();}
 });
-document.addEventListener('visibilitychange',function(){
-  if(document.hidden){if(NATIVE&&dirty)mirrorNow();}
-  else if(!ui.view&&!ui.sheet)render();
-});
+document.addEventListener('visibilitychange',function(){if(!document.hidden&&!ui.view&&!ui.sheet)render();});
 window.addEventListener('resize',function(){if(dockVisible())document.documentElement.style.setProperty('--dockh',$('#dock').offsetHeight+'px');});
 
 render();
-if(NATIVE){
-  restoreNative();
-  var AppP=plug('App');
-  if(AppP)AppP.addListener('backButton',function(){
-    if(ui.sheet)closeSheet();
-    else if(ui.view)closeView();
-    else if(ui.stamp)A.stampOff();
-    else if(ui.tab!=='class'){ui.tab='class';render();window.scrollTo(0,0);}
-    else AppP.exitApp();
-  });
-}
-if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)&&!NATIVE){
+if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)){
   window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});
 }
 })();

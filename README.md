@@ -1,12 +1,11 @@
 # LessonObserver – „Mitarbeit“
 
-Mitarbeit im Unterricht erfassen und auswerten. Die App gibt es als Web-App (`www/index.html`, läuft auch offline) und als Android-App (APK).
+Mitarbeit im Unterricht erfassen und auswerten. Web-App (`www/index.html`), läuft auch offline. Eine Android-APK ist aktuell nicht Teil des Projekts (sie steht noch in der Git-Historie).
 
 ## Daten und Speicherung
 
-- Alle Daten bleiben **lokal auf dem Gerät**. Es wird nichts übertragen.
-- Browser: `localStorage`. Android-App: `localStorage` plus eine Spiegeldatei (`mitarbeit-daten.json`) im App-Ordner. Wird der WebView-Speicher geleert, stellt die App die Daten beim nächsten Start aus der Datei wieder her.
-- Die Android-App ist von Googles automatischer Cloud-Sicherung ausgenommen (`allowBackup=false`), weil Schülernamen gespeichert werden. Sicherungen macht man selbst unter **Mehr → Sicherung speichern** (Teilen-Menü: Dateien, Drive, E-Mail …).
+- Alle Daten bleiben **lokal im Browser des Geräts** (`localStorage`). Es wird nichts übertragen.
+- Sicherungen macht man selbst unter **Mehr → Sicherung speichern** und lädt sie dort wieder.
 
 ## Alte Daten einfügen
 
@@ -38,19 +37,6 @@ Ohne Kopfzeile gilt die Reihenfolge `++ · + · ○ · − · −− · Joker-Pu
 **Neue Einträge im Unterricht** bekommen automatisch das aktuelle Datum (oder das im Kopf gewählte Datum) und lassen sich im Verlauf ebenfalls nachträglich ändern.
 
 Unbekannte Namen werden auf Wunsch als neue Schüler:innen angelegt. Importierte Einträge haben keine Uhrzeit.
-
-## Android-APK
-
-Die APK entsteht per GitHub Actions (`.github/workflows/android.yml`): bei jedem Push als Artefakt **Mitarbeit-apk**, bei einem Tag `v*` zusätzlich als Anhang am Release. Es ist eine Debug-signierte APK; zum Installieren auf dem Handy „Apps aus unbekannten Quellen“ erlauben.
-
-Lokal bauen (Node 22, JDK 21, Android SDK):
-
-```
-npm ci
-npm run apk        # → android/app/build/outputs/apk/debug/app-debug.apk
-```
-
-Nach Änderungen an `www/` genügt `npm run sync`; das Android-Projekt kann mit `npx cap open android` in Android Studio geöffnet werden.
 
 ## Als Web-App auf dem Handy
 
