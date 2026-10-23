@@ -1,5 +1,5 @@
 /* Offline-Cache für die Web-App: erst Netz (damit Updates ankommen), bei fehlendem oder langsamem Netz aus dem Cache */
-var CACHE='mitarbeit-v4';
+var CACHE='mitarbeit-v5';
 var FILES=['./','index.html','manifest.webmanifest','icon-192.png','icon-512.png','icon-maskable-512.png','pdf.js','lib/jspdf.umd.min.js','lib/jspdf.plugin.autotable.min.js'];
 self.addEventListener('install',function(e){
   e.waitUntil(caches.open(CACHE).then(function(c){return c.addAll(FILES);}).then(function(){return self.skipWaiting();}));

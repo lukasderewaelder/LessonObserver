@@ -95,7 +95,7 @@ Auf großen Bildschirmen passt sich das Layout an (mehr Kacheln pro Zeile, Stemp
 
 ## Nur Vornamen
 
-Unter **Sortierung & Ansicht** (Handy), in der Leiste über den Kacheln (PC) oder unter Mehr → Anzeige lässt sich **Nur Vornamen anzeigen** einschalten. Gleiche Vornamen werden mit dem Anfangsbuchstaben des Nachnamens ergänzt (Tom M., Tom P.); bei gleichem Anfangsbuchstaben steht der volle Nachname. Das gilt für Kacheln und Sitzplan; Auswertung, Schüler-Fenster, PDF und CSV zeigen weiter die vollen Namen.
+Unter **Ansicht** (Handy), in der Leiste über den Kacheln (PC) oder unter Mehr → Anzeige wählst du **Nur Vorname** (Standard) oder **Vor- und Nachname**. Gleiche Vornamen werden mit dem Anfangsbuchstaben des Nachnamens ergänzt (Tom M., Tom P.); bei gleichem Anfangsbuchstaben steht der volle Nachname. Das gilt für Kacheln und Sitzplan; Auswertung, Schüler-Fenster, PDF und CSV zeigen weiter die vollen Namen.
 
 ## Kursfarben
 
@@ -110,11 +110,12 @@ Jeder Kurs hat eine Farbe (Kurs bearbeiten → Farbe). Sie erscheint als Balken 
 
 ## Layout (Handy, Tablet, PC)
 
-- **Navigation:** Unterricht | Auswertung | Mehr. Kursverwaltung, Einstellungen, Sicherung und Halbjahre liegen unter „Mehr“. Oben links wechselt der Kurs, oben rechts das Datum für neue Einträge.
-- **Unterricht:** Suchfeld (Filter nach Namen) und Sortier-Knopf (Sortierung, Kacheln pro Reihe, Nachtragen). Standard sind 2 Kacheln pro Reihe, kompakt 3. Unten fest: fünf große Wertungsknöpfe und darunter Joker | Marker | Zufall. Wertung wählen → Schüler:in antippen.
+- **Navigation:** Unten die Tab-Leiste Unterricht | Auswertung | Mehr, oben der Kursname (Tippen wechselt den Kurs) und das Datum für neue Einträge. „Mehr“ ist ein Menü mit Unterseiten: Kurse · Anzeige · Joker & Marker · Halbjahre · Daten & Sicherung · App & Hilfe; ‹ Mehr bzw. die Zurück-Taste führt zurück.
+- **Gestaltung:** ruhig und fast einfarbig (nur die Wertungen sind farbig), durchgehend normale Schrift ohne Fettdruck, überall dieselben Knöpfe: gefüllt = Hauptaktion, Umriss = weitere Aktion, Text = Navigation.
+- **Unterricht:** Suchfeld und Ansicht-Knopf (Sortierung, Namen, Kacheln pro Reihe, Nachtragen). Standard sind 2 Kacheln pro Reihe, kompakt 3. Die Kacheln zeigen den Vornamen (gleiche Vornamen mit Kürzel, Tom M.); lange Namen brechen um und werden nie abgeschnitten. Unten fest: fünf Wertungsknöpfe und darunter Joker | Marker | Zufall, darunter die Tab-Leiste. Wertung wählen → Schüler:in antippen.
 - **Schüler:in-Fenster:** Name, Kurs, Wertungen, Status, dazu einklappbar „Joker & Marker“ und „Bemerkung hinzufügen“, „Verlauf ansehen“, „PDF-Bericht“. Mit ‹ Zurück / Weiter › wechselst du durch die Liste.
 - **Nachtragen (Handy):** Eingabemaske: Person wählen → Datum → Wertungen mit −/+ erfassen. Am PC bleibt die Tabelle.
-- **Auswertung (Handy):** schlanke Liste (Name, Ø Tendenz, Anzahl, Verteilung). Antippen öffnet Verteilung, Verlauf, Joker/Marker, Notizen und alle Einträge. Der Zeitraumfilter (Heute, 7 Tage, 30 Tage, 1. Halbjahr, 2. Halbjahr, Alles, Zeitraum …) gilt auch für das PDF.
+- **Auswertung (Handy):** schlanke Liste (Name, Ø Tendenz, Anzahl, Verteilung). Antippen öffnet Verteilung, Verlauf, Joker/Marker, Notizen und alle Einträge. Der Zeitraum (Heute, 7 Tage, 30 Tage, 1. Halbjahr, 2. Halbjahr, Alles, eigener Zeitraum) wird über einen Knopf gewählt und gilt auch für das PDF.
 - **Halbjahre** sind unter Mehr einstellbar. Vorgeschlagen wird ein Schuljahr ab 1. August; bitte an dein Bundesland anpassen.
 
 ## PDF-Export
