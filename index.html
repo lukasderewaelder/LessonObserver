@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Mitarbeit">
 <meta name="format-detection" content="telephone=no">
-<meta name="app-version" content="2026-10-19.2">
+<meta name="app-version" content="2026-10-23.1">
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#EDF0F4" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0E131B" media="(prefers-color-scheme: dark)">
@@ -80,6 +80,37 @@ select{padding-right:6px}
 /* Kacheln */
 .grid{display:grid;grid-template-columns:repeat(var(--cols,2),minmax(0,1fr));gap:6px;--tmin:200px}
 .grid.c3{--tmin:160px}
+/* Sitzplan */
+.fo{display:inline-flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;white-space:nowrap}
+.fo input{width:18px;height:18px;accent-color:var(--cc)}
+.planbar{justify-content:flex-start;flex-wrap:wrap}
+.phint{font-size:13px;flex:1 1 180px}
+.planbar .deskonly{display:none}
+.pscroll{overflow-x:auto;padding-bottom:4px}
+.pgrid{display:flex;flex-direction:column;gap:6px;min-width:calc(var(--nc)*50px)}
+.prow{display:flex;gap:12px}
+.desk{flex:1 1 0;min-width:0;display:grid;grid-template-columns:1fr 1fr;gap:3px;padding:3px;border-radius:10px;background:var(--surface2);border:1px solid var(--line)}
+.slot{min-width:0;min-height:56px;border-radius:8px;display:flex;flex-direction:column}
+.slot>span,.poolgrid>span.dim,.poolgrid>span{display:flex;flex-direction:column;flex:1 1 auto;min-width:0}
+.slot.empty{border:1.5px dashed var(--line);background:var(--surface)}
+.dim{opacity:.28}
+.board{margin-top:6px;text-align:center;font:700 12px/1 var(--ui);letter-spacing:.14em;text-transform:uppercase;padding:9px;border-radius:8px;background:var(--ink);color:var(--surface)}
+.tile.seat{padding:4px 4px 4px 6px;border-left-width:4px;gap:1px;border-radius:7px;flex:1 1 auto;min-width:0;justify-content:center}
+.seat .fn,.grid.c3 .seat .fn{font-size:13px}
+.seat .chips{min-height:16px;margin-top:0}
+.seat .chip{height:16px;min-width:16px;padding:0 3px;font-size:10px}
+.seat .jb{padding:2px 4px;font-size:10px}.seat .jl{display:none}
+.pool{margin-top:14px;padding:8px;border-radius:12px;border:1.5px dashed var(--line)}
+.pool h3{margin:0 0 6px;font-size:14px}
+.poolgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:5px}
+.plan.edit .tile.seat{touch-action:none;cursor:grab}
+.plan.edit .slot.empty,.plan.edit .pool{touch-action:manipulation}
+.slot.over,.pool.over{outline:3px solid var(--cc);outline-offset:1px}
+.tile.dragsrc{opacity:.3}
+.tile.mv{outline:3px solid var(--cc);outline-offset:-1px;background:color-mix(in srgb,var(--cc) 14%,var(--surface))}
+.tile.ghost{position:fixed;left:0;top:0;z-index:9999;pointer-events:none;opacity:.92;box-shadow:0 8px 24px rgba(0,0,0,.35);transform-origin:center}
+@media (min-width:700px){.planbar .deskonly{display:inline-flex}.seat .fn,.grid.c3 .seat .fn{font-size:16px}.slot{min-height:64px}.pgrid{max-width:980px;margin:0 auto}.tile.seat{padding:6px 8px 6px 9px}}
+.planset{display:flex;gap:12px;flex-wrap:wrap}.planset .fld{flex:1 1 140px;margin-bottom:8px}
 .tile{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;position:relative;display:flex;flex-direction:column;gap:2px;padding:6px 8px 6px 9px;text-align:left;background:var(--surface);border:1px solid var(--line);border-left:6px solid var(--tc,var(--line));border-radius:8px;transition:transform .08s}
 .tile:active{transform:scale(.97)}
 .fn{display:block;font:600 18px/1.15 var(--ui);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -586,11 +617,39 @@ var reduceMotion=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: 
 var storageOK=true;
 function defaults(){
   return {v:1,courses:[],events:[],settings:{
-    activeCourse:null,cols:2,compact:1,closeAfter:true,haptics:true,wake:false,installSnooze:null,sort:'name',
+    activeCourse:null,cols:2,compact:1,firstOnly:false,closeAfter:true,haptics:true,wake:false,installSnooze:null,sort:'name',
     jokerReasons:['Fleiß','Hilfsbereitschaft','Gute Idee','Besondere Leistung'],
     tags:[{id:'t1',name:'HA fehlt',short:'HA'},{id:'t2',name:'Material fehlt',short:'Mat'},{id:'t3',name:'Störung',short:'St'}],
     lastBackup:null,backupSnooze:null
   }};
+}
+/* Sitzplan: pos[Schüler-ID] = Platz; Platz = Reihe*(Doppelbänke*2)+Spalte, Reihe 0 = vorn (Tafel) */
+function normPlan(c){
+  var p=c.plan&&typeof c.plan==='object'?c.plan:{};
+  var rows=Math.max(1,Math.min(12,parseInt(p.rows,10)||4)),desks=Math.max(1,Math.min(8,parseInt(p.desks,10)||3));
+  var ids={};c.students.forEach(function(s){ids[s.id]=1;});
+  var pos={},used={},max=rows*desks*2;
+  Object.keys(p.pos&&typeof p.pos==='object'?p.pos:{}).forEach(function(id){
+    var n=p.pos[id];
+    if(ids[id]&&Number.isInteger(n)&&n>=0&&n<max&&!used[n]){pos[id]=n;used[n]=1;}
+  });
+  return {on:!!p.on,rows:rows,desks:desks,pos:pos,init:!!p.init||Object.keys(pos).length>0};
+}
+/* Plätze bei geänderter Raumgröße übernehmen (Reihe/Spalte bleiben, Überstehende gehen in die Ablage) */
+function planRemap(oldDesks,pos,rows,desks){
+  var oc=oldDesks*2,nc=desks*2,out={};
+  Object.keys(pos).forEach(function(id){
+    var n=pos[id],r=Math.floor(n/oc),k=n%oc;
+    if(r<rows&&k<nc)out[id]=r*nc+k;
+  });
+  return out;
+}
+function seatAutoFill(c){
+  var p=c.plan,max=p.rows*p.desks*2;
+  var list=c.students.slice().sort(function(a,b){return (a.last+' '+a.first).localeCompare(b.last+' '+b.first,'de');});
+  p.pos={};
+  list.slice(0,max).forEach(function(s,i){p.pos[s.id]=i;});
+  p.init=true;
 }
 function normalize(s){
   var d=defaults();
@@ -604,6 +663,7 @@ function normalize(s){
     c.students=Array.isArray(c.students)?c.students:[];
     c.jokerEvery=Math.max(1,parseInt(c.jokerEvery,10)||5);
     c.pickDone=Array.isArray(c.pickDone)?c.pickDone:[];
+    c.plan=normPlan(c);
   });
   s.v=1;
   return s;
@@ -728,7 +788,7 @@ var state=load();
 try{if(navigator.storage&&navigator.storage.persist) navigator.storage.persist();}catch(e){}
 
 /* Oberflächenzustand (wird nicht gespeichert) */
-var ui={pdf:null,filter:'',lastSid:null,dopen:{},imp:null,nt:null,sel:[],cq:{class:'',nt:''},ch:{class:0,nt:0},copen:{class:false,nt:false},tab:'class',selDate:null,stamp:null,stampReason:'',sheet:null,view:null,draft:null,pick:null,flash:null,
+var ui={pdf:null,filter:'',lastSid:null,dopen:{},imp:null,nt:null,sel:[],cq:{class:'',nt:''},ch:{class:0,nt:0},copen:{class:false,nt:false},tab:'class',selDate:null,stamp:null,stampReason:'',sheet:null,view:null,draft:null,pick:null,flash:null,planEdit:false,moveSid:null,
         range:{p:'30',from:'',to:''},tsort:{k:'name',dir:1}};
 
 var curDate=function(){return ui.selDate==null?todayStr():ui.selDate;};
@@ -954,7 +1014,26 @@ function backupDue(){
   var days=Math.floor((now-s.lastBackup)/864e5);
   return days>=7?'vor '+days+' Tagen':null;
 }
-function tileHTML(s,evs,c,dd,cols){
+/* Anzeigenamen der Kacheln: bei „Nur Vornamen“ kürzt gleiche Vornamen auf „Tom M.“, bei gleichem Anfangsbuchstaben bleibt der volle Nachname */
+function labelMap(c){
+  var m=new Map(),groups={};
+  c.students.forEach(function(s){
+    m.set(s.id,{fn:s.first||s.last,ln:s.first?s.last:''});
+    if(state.settings.firstOnly&&s.first){var k=nrm(s.first.trim());(groups[k]=groups[k]||[]).push(s);}
+  });
+  if(!state.settings.firstOnly)return m;
+  c.students.forEach(function(s){
+    var g=groups[s.first?nrm(s.first.trim()):''],last=String(s.last||'').trim(),sfx='';
+    if(g&&g.length>1&&last){
+      var ini=nrm(last).charAt(0);
+      var clash=g.some(function(o){return o!==s&&nrm(String(o.last||'').trim()).charAt(0)===ini;});
+      sfx=clash?last:last.charAt(0).toUpperCase()+'.';
+    }
+    m.set(s.id,{fn:s.first?(s.first.trim()+(sfx?' '+sfx:'')):s.last,ln:''});
+  });
+  return m;
+}
+function tileHTML(s,evs,c,dd,cols,labs,seat){
   var day=evs.filter(function(e){return e.date===dd;}).sort(function(a,b){return a.ts-b.ts;});
   var rates=day.filter(function(e){return e.type==='rate';});
   var lastR=rates[rates.length-1];
@@ -970,30 +1049,63 @@ function tileHTML(s,evs,c,dd,cols){
   });
   if(jN)items.push({key:'jk',ts:jTs,cls:'jk',txt:'★'+(jN>1?jN:''),n:1});
   items.sort(function(a,b){return a.ts-b.ts;});
-  var max=cols===3?2:3,chips=[];
+  var max=seat?1:cols===3?2:3,chips=[];
   var hidden=Math.max(0,items.length-max),vis=items.slice(hidden);
   if(hidden)chips.push('<i class="chip more">+'+hidden+'</i>');
   vis.forEach(function(it,i){chips.push('<i class="chip '+it.cls+(i===vis.length-1?' nw':'')+'">'+esc(it.txt)+(it.n>1?'×'+it.n:'')+'</i>');});
   var label=fullName(s)+(said.length?', heute: '+said.join(', '):'')+', Joker-Punkte '+jk.prog+' von '+c.jokerEvery+(jk.avail?', '+jk.avail+' Joker verfügbar':'');
-  return '<button class="tile'+(ui.sel.indexOf(s.id)>=0?' picked':'')+(ui.flash===s.id?' flash':'')+(ui.lastSid===s.id?' last':'')+'" data-act="tile" data-sid="'+s.id+'"'+(tc?' style="--tc:'+tc+'"':'')+' title="'+esc(fullName(s))+'" aria-label="'+esc(label)+'">'+
-    '<span class="frow"><span class="fn">'+esc(s.first||s.last)+'</span>'+(jk.avail?'<span class="jb" aria-hidden="true"><span class="jl">Joker </span>'+jk.avail+'</span>':'')+'</span>'+
-    '<span class="ln">'+esc(s.first?s.last:'')+'&nbsp;</span>'+
-    '<span class="chips">'+chips.join('')+'<span class="jst" aria-hidden="true">★ '+jk.prog+'/'+c.jokerEvery+'</span></span>'+
+  var lab=(labs&&labs.get(s.id))||{fn:s.first||s.last,ln:s.first?s.last:''};
+  var act=seat&&planEditing()?'seatTap':'tile';
+  return '<button class="tile'+(seat?' seat':'')+(ui.sel.indexOf(s.id)>=0?' picked':'')+(ui.moveSid===s.id?' mv':'')+(ui.flash===s.id?' flash':'')+(ui.lastSid===s.id?' last':'')+'" data-act="'+act+'" data-sid="'+s.id+'"'+(tc?' style="--tc:'+tc+'"':'')+' title="'+esc(fullName(s))+'" aria-label="'+esc(label)+'">'+
+    '<span class="frow"><span class="fn">'+esc(lab.fn)+'</span>'+(jk.avail?'<span class="jb" aria-hidden="true"><span class="jl">Joker </span>'+jk.avail+'</span>':'')+'</span>'+
+    (seat?'':'<span class="ln">'+esc(lab.ln)+'&nbsp;</span>')+
+    '<span class="chips">'+chips.join('')+(seat?'':'<span class="jst" aria-hidden="true">★ '+jk.prog+'/'+c.jokerEvery+'</span>')+'</span>'+
   '</button>';
 }
+function nameMatch(toks,s){
+  if(!toks.length)return true;
+  var w=nrm(s.first+' '+s.last).split(/\s+/);
+  return toks.every(function(t){return w.some(function(x){return x.indexOf(t)===0;});});
+}
 function tilesHTML(c,idx,dd,cols){
-  var toks=nrm(ui.filter).split(/\s+/).filter(Boolean);
-  var list=sortStudents(c,idx).filter(function(s){
-    if(!toks.length)return true;
-    var w=nrm(s.first+' '+s.last).split(/\s+/);
-    return toks.every(function(t){return w.some(function(x){return x.indexOf(t)===0;});});
-  });
+  var toks=nrm(ui.filter).split(/\s+/).filter(Boolean),labs=labelMap(c);
+  var list=sortStudents(c,idx).filter(function(s){return nameMatch(toks,s);});
   if(!list.length)return '<p class="muted" style="grid-column:1/-1;margin:14px 4px">Keine Treffer für „'+esc(ui.filter)+'“.</p>';
-  return list.map(function(s){return tileHTML(s,idx.get(s.id)||[],c,dd,cols);}).join('');
+  return list.map(function(s){return tileHTML(s,idx.get(s.id)||[],c,dd,cols,labs);}).join('');
+}
+/* Sitzplan: Tafel unten (Blick der Lehrkraft), vorderste Reihe unten; nicht gesetzte Schüler liegen in der Ablage */
+function planEditing(){var c=course();return !!(ui.planEdit&&ui.tab==='class'&&c&&c.plan&&c.plan.on);}
+function planBody(c,idx,dd){
+  var p=c.plan,nc=p.desks*2,labs=labelMap(c),byId={},occ={},toks=nrm(ui.filter).split(/\s+/).filter(Boolean);
+  c.students.forEach(function(s){byId[s.id]=s;});
+  Object.keys(p.pos).forEach(function(id){occ[p.pos[id]]=id;});
+  var seat=function(s){
+    return '<span class="'+(nameMatch(toks,s)?'':'dim')+'">'+tileHTML(s,idx.get(s.id)||[],c,dd,3,labs,true)+'</span>';
+  };
+  var rowsHTML='';
+  for(var r=p.rows-1;r>=0;r--){
+    rowsHTML+='<div class="prow">';
+    for(var d=0;d<p.desks;d++){
+      rowsHTML+='<div class="desk">';
+      for(var k=0;k<2;k++){
+        var slot=r*nc+d*2+k,s=byId[occ[slot]];
+        rowsHTML+='<div class="slot'+(s?'':' empty')+'" data-slot="'+slot+'"'+(s?'':' data-act="slotTap"')+'>'+(s?seat(s):'')+'</div>';
+      }
+      rowsHTML+='</div>';
+    }
+    rowsHTML+='</div>';
+  }
+  var pool=c.students.filter(function(s){return p.pos[s.id]==null;}).sort(function(a,b){return (a.last+' '+a.first).localeCompare(b.last+' '+b.first,'de');});
+  var html='<div class="pscroll"><div class="pgrid" style="--nc:'+nc+'">'+rowsHTML+'<div class="board">Tafel</div></div></div>';
+  if(pool.length||planEditing())html+='<div class="pool" data-act="poolTap"><h3>Ablage ('+pool.length+')</h3><div class="poolgrid">'+
+    (pool.length?pool.map(seat).join(''):'<span class="muted">Leer – hierher ziehen, um einen Platz freizugeben.</span>')+'</div></div>';
+  return html;
 }
 function refreshGrid(){
-  var c=course(),g=$('#grid');if(!c||!g)return;
-  g.innerHTML=tilesHTML(c,idxFor(c.id),curDate(),state.settings.cols===3?3:2);
+  var c=course();if(!c)return;
+  var g=$('#grid'),pl=$('#plan');
+  if(g)g.innerHTML=tilesHTML(c,idxFor(c.id),curDate(),state.settings.cols===3?3:2);
+  else if(pl)pl.innerHTML=planBody(c,idxFor(c.id),curDate());
 }
 function classHTML(){
   var c=course();
@@ -1008,10 +1120,20 @@ function classHTML(){
   if(dd!==todayStr())html+='<div class="banner"><span>'+(dd?'Neue Einträge gelten für <b>'+fmtDate(dd,true)+'</b>.':'<b>Nachtragen:</b> Neue Einträge bekommen kein Datum.')+'</span><button class="btn sm primary" data-act="dset" data-m="today">Zurück zu heute</button></div>';
   html+='<div class="fbar"><label class="fsearch">'+IC.search+'<input type="search" data-bind="filter" placeholder="Schüler suchen …" value="'+esc(ui.filter)+'" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Schüler suchen"></label>'+
     '<button class="sortbtn" data-act="sortSheet" aria-label="Sortierung und Ansicht">'+IC.sort+'</button></div>';
+  var fo='<label class="fo"><input type="checkbox" class="sw" data-bind="firstOnly"'+(state.settings.firstOnly?' checked':'')+'><span>Nur Vornamen</span></label>';
+  if(c.plan.on){
+    var ed=planEditing();
+    html+='<div class="tbar planbar"><button class="btn'+(ed?' primary':'')+'" data-act="planEdit" aria-pressed="'+ed+'">'+(ed?'Fertig':'Plan bearbeiten')+'</button>'+
+      (ed?'<span class="muted phint">Schüler:innen ziehen oder antippen und dann den Zielplatz antippen.</span>':'<button class="btn deskonly" data-act="openNachtrag">Nachtragen</button>')+
+      '<span class="deskonly">'+fo+'</span></div>';
+    if(!ed)html+='<div class="selbar">'+comboHTML('class')+'</div>';
+    html+='<div id="plan" class="plan'+(ed?' edit':'')+'">'+planBody(c,idx,dd)+'</div>';
+    return html;
+  }
   html+='<div class="tbar deskbar"><label class="sel"><select data-bind="sort" aria-label="Sortierung">'+
     [['name','Nachname'],['first','Vorname'],['long','Länger nicht bewertet']].map(function(o){return '<option value="'+o[0]+'"'+(state.settings.sort===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('')+
     '</select></label>'+
-    '<button class="btn" data-act="openNachtrag">Nachtragen</button>'+
+    '<button class="btn" data-act="openNachtrag">Nachtragen</button>'+fo+
     '<div class="seg" role="group" aria-label="Kacheln pro Reihe"><button data-act="cols" data-n="2" aria-pressed="'+(cols===2)+'">2</button><button data-act="cols" data-n="3" aria-pressed="'+(cols===3)+'">3</button></div></div>';
   html+='<div class="selbar">'+comboHTML('class')+'</div>';
   html+='<div id="grid" class="grid'+(cols===3?' c3':'')+'" style="--cols:'+cols+'">'+tilesHTML(c,idx,dd,cols)+'</div>';
@@ -1027,7 +1149,7 @@ function stampLabel(k){
   var t=state.settings.tags.filter(function(x){return 'tag:'+x.id===k;})[0];
   return t?t.name:k;
 }
-function dockVisible(){return ui.tab==='class'&&!!course()&&course().students.length>0;}
+function dockVisible(){return ui.tab==='class'&&!!course()&&course().students.length>0&&!planEditing();}
 function renderDock(){
   var dock=$('#dock');
   var vis=dockVisible();
@@ -1179,6 +1301,7 @@ function moreHTML(){
   var tm=terms();
   var html='<div class="cols2"><div class="sect"><h3>Kurse</h3>'+coursesHTML()+'</div><div class="sect"><h3>Anzeige</h3>'+
     '<div class="setrow"><span>Kacheln pro Reihe<small>Am PC bestimmt die Zahl die Kachelgröße.</small></span><div class="seg"><button data-act="cols" data-n="2" aria-pressed="'+(s.cols!==3)+'">2</button><button data-act="cols" data-n="3" aria-pressed="'+(s.cols===3)+'">3</button></div></div>'+
+    '<label class="setrow"><span>Nur Vornamen anzeigen<small>In Kacheln und Sitzplan. Gleiche Vornamen werden mit dem Anfangsbuchstaben des Nachnamens ergänzt (Tom M.).</small></span><input type="checkbox" class="sw" data-bind="firstOnly"'+(s.firstOnly?' checked':'')+'></label>'+
     '<label class="setrow"><span>Fenster nach einer Aktion schließen<small>Schnellster Ablauf: Kachel, Bewertung, fertig.</small></span><input type="checkbox" class="sw" data-bind="closeAfter"'+(s.closeAfter?' checked':'')+'></label>'+
     (navigator.vibrate?'<label class="setrow"><span>Vibration beim Stempeln<small>Kurzes Feedback, keine Töne.</small></span><input type="checkbox" class="sw" data-bind="haptics"'+(s.haptics!==false?' checked':'')+'></label>':'')+
     ((navigator.wakeLock||NATIVE)?'<label class="setrow"><span>Bildschirm anlassen<small>Das Display geht nicht aus, solange die App offen ist.</small></span><input type="checkbox" class="sw" data-bind="wake"'+(s.wake?' checked':'')+'></label>':'')+'</div>';
@@ -1284,6 +1407,7 @@ function sortSheet(){
   return '<div class="sh-head"><h2>Sortierung &amp; Ansicht</h2><button class="btn sm" data-act="close">Fertig</button></div>'+
     '<div class="sec"><h3>Sortieren nach</h3><div class="mgrid">'+[['name','Nachname'],['first','Vorname'],['long','Länger nicht bewertet']].map(function(o){return '<button class="act'+(state.settings.sort===o[0]?' on':'')+'" data-act="setSort" data-m="'+o[0]+'" aria-pressed="'+(state.settings.sort===o[0])+'">'+o[1]+'</button>';}).join('')+'</div></div>'+
     '<div class="sec"><h3>Kacheln pro Reihe</h3><div class="seg wide" role="group" style="display:grid;grid-template-columns:1fr 1fr"><button data-act="cols" data-n="2" aria-pressed="'+(cols===2)+'">2 (Standard)</button><button data-act="cols" data-n="3" aria-pressed="'+(cols===3)+'">3 (kompakt)</button></div></div>'+
+    '<label class="setrow"><span>Nur Vornamen anzeigen<small>Gleiche Vornamen werden mit dem Anfangsbuchstaben des Nachnamens ergänzt (Tom M.).</small></span><input type="checkbox" class="sw" data-bind="firstOnly"'+(state.settings.firstOnly?' checked':'')+'></label>'+
     '<div class="sec"><button class="btn block" data-act="openNachtrag">Daten nachtragen</button></div>';
 }
 function dateSheet(){
@@ -1410,6 +1534,11 @@ function stuRows(){
     return '<div class="srow"><input class="inp" data-bind="sfirst" data-i="'+i+'" value="'+esc(s.first)+'" placeholder="Vorname" autocomplete="off" aria-label="Vorname '+(i+1)+'"><input class="inp" data-bind="slast" data-i="'+i+'" value="'+esc(s.last)+'" placeholder="Nachname" autocomplete="off" aria-label="Nachname '+(i+1)+'"><button class="ico" data-act="delStudent" data-i="'+i+'" aria-label="Entfernen">✕</button></div>';
   }).join('');
 }
+function planDims(d){return [Math.max(1,Math.min(12,parseInt(d.plan.rows,10)||1)),Math.max(1,Math.min(8,parseInt(d.plan.desks,10)||1))];}
+function planCapText(d){
+  var q=planDims(d),cap=q[0]*q[1]*2,n=d.students.length;
+  return q[0]+' Reihen × '+q[1]+' Doppelbänke = '+cap+' Plätze · '+n+' Schüler:innen'+(n>cap?' – '+(n-cap)+' kommen in die Ablage.':'.');
+}
 function courseView(){
   var d=ui.draft,isNew=ui.view.isNew;
   return '<div class="vhead"><button class="btn sm" data-act="courseCancel">Abbrechen</button><h2>'+(isNew?'Neuer Kurs':'Kurs bearbeiten')+'</h2><button class="btn sm primary" data-act="courseSave">Speichern</button></div>'+
@@ -1418,6 +1547,9 @@ function courseView(){
    '<label class="fld"><span>Fach (optional)</span><input class="inp" data-bind="csubj" value="'+esc(d.subject||'')+'" placeholder="z. B. Chemie" autocomplete="off"></label>'+
    '<div class="fld"><span>Farbe</span><div class="swatches" role="radiogroup" aria-label="Kursfarbe">'+PAL.map(function(col,i){return '<button class="sw-c'+(d.color===col?' on':'')+'" style="--k:'+col+'" data-act="setColor" data-c="'+col+'" role="radio" aria-checked="'+(d.color===col)+'" aria-label="Farbe '+(i+1)+'"></button>';}).join('')+'</div></div>'+
    '<label class="fld"><span>Punkte pro Joker</span><input class="inp" type="number" inputmode="numeric" min="1" max="99" data-bind="every" value="'+esc(d.jokerEvery)+'" style="max-width:120px"><small>Gilt rückwirkend für alle gesammelten Punkte dieses Kurses.</small></label>'+
+   '<div class="fld"><label class="setrow"><span>Sitzplan-Ansicht<small>Zeigt diesen Kurs im Unterricht als Sitzplan statt als Liste.</small></span><input type="checkbox" class="sw" data-bind="cplan"'+(d.plan.on?' checked':'')+'></label>'+
+     (d.plan.on?'<div class="planset"><label class="fld"><span>Reihen</span><input class="inp" type="number" inputmode="numeric" min="1" max="12" data-bind="prows" value="'+esc(d.plan.rows)+'"></label>'+
+       '<label class="fld"><span>Doppelbänke pro Reihe</span><input class="inp" type="number" inputmode="numeric" min="1" max="8" data-bind="pdesks" value="'+esc(d.plan.desks)+'"></label></div><small id="planCap">'+planCapText(d)+'</small>':'')+'</div>'+
    '<h3>Schüler:innen (<span id="stuCount">'+d.students.length+'</span>)</h3><div id="stuList">'+stuRows()+'</div>'+
    '<div class="row"><button class="btn sm" data-act="addStudent">+ Schüler:in</button><button class="btn sm" data-act="sortStudents">A–Z sortieren</button></div>'+
    '<details class="box"><summary>Liste einfügen</summary><p class="hint">Eine Person pro Zeile. Erkannt werden „Vorname Nachname“, „Nachname, Vorname“ sowie zwei Spalten aus Excel (Vorname, Nachname).</p><textarea id="pasteTxt" rows="6" placeholder="Anna Beispiel&#10;Müller, Ben&#10;Clara&#9;Schmidt" aria-label="Liste einfügen"></textarea><div class="row" style="margin-top:8px"><button class="btn sm primary" data-act="pasteStudents">Übernehmen</button></div></details>'+
@@ -1894,7 +2026,7 @@ function openDetail(sid){closeSheet();ui.view={type:'student',sid:sid};el_scroll
 function el_scrollTop0(){$('#view').scrollTop=0;}
 function newCourse(){
   var used=state.courses.filter(function(c){return !c.archived;}).map(ccol),col=PAL.filter(function(x){return used.indexOf(x)<0;})[0]||PAL[state.courses.length%PAL.length];
-  ui.draft={id:uid(),name:'',subject:'',color:col,jokerEvery:5,students:[],pickDone:[],archived:false};ui.view={type:'course',isNew:true};closeSheet();el_scrollTop0();renderView();var n=$('#cName');if(n)n.focus();}
+  ui.draft={id:uid(),name:'',subject:'',color:col,jokerEvery:5,students:[],pickDone:[],archived:false,plan:{on:false,rows:4,desks:3,pos:{},init:false}};ui.view={type:'course',isNew:true};closeSheet();el_scrollTop0();renderView();var n=$('#cName');if(n)n.focus();}
 function editCourse(id){
   var c=state.courses.filter(function(x){return x.id===id;})[0];if(!c)return;
   ui.draft=JSON.parse(JSON.stringify(c));ui.view={type:'course',isNew:false};closeSheet();el_scrollTop0();renderView();
@@ -1905,7 +2037,15 @@ function courseSave(){
   if(!d.name){toast('Bitte einen Kursnamen eingeben.');var n=$('#cName');if(n)n.focus();return;}
   d.students=d.students.map(function(s){return {id:s.id,first:String(s.first||'').trim(),last:String(s.last||'').trim()};}).filter(function(s){return s.first||s.last;});
   d.jokerEvery=Math.max(1,Math.min(99,parseInt(d.jokerEvery,10)||5));
+  var applyPlan=function(){
+    var pd=planDims(d),oldC=isNew?null:state.courses.filter(function(c){return c.id===d.id;})[0],oldPlan=oldC&&oldC.plan;
+    if(oldPlan&&(oldPlan.rows!==pd[0]||oldPlan.desks!==pd[1]))d.plan.pos=planRemap(oldPlan.desks,d.plan.pos,pd[0],pd[1]);
+    d.plan.rows=pd[0];d.plan.desks=pd[1];
+    d.plan=normPlan(d);
+    if(d.plan.on&&!d.plan.init)seatAutoFill(d);
+  };
   if(isNew){
+    applyPlan();
     state.courses.push(d);state.settings.activeCourse=d.id;ui.tab='class';
   }else{
     var i=state.courses.findIndex(function(c){return c.id===d.id;});
@@ -1916,6 +2056,7 @@ function courseSave(){
     if(removed.length&&cnt&&!confirm(removed.length+' Schüler:in(nen) entfernen? Alle zugehörigen Einträge ('+cnt+') werden dabei gelöscht.'))return;
     state.events=state.events.filter(function(e){return e.cid!==d.id||keep.has(e.sid);});
     d.pickDone=(d.pickDone||[]).filter(function(id){return keep.has(id);});
+    applyPlan();
     state.courses[i]=d;
     if(d.archived&&state.settings.activeCourse===d.id)state.settings.activeCourse=null;
   }
@@ -1993,13 +2134,13 @@ function importBackup(file){
 
 /* ───────── Aktionen ───────── */
 var A={
-  tab:function(el){showBars();ui.tab=el.dataset.t;if(ui.tab!=='class')ui.stamp=null;render();window.scrollTo(0,0);},
+  tab:function(el){showBars();ui.tab=el.dataset.t;if(ui.tab!=='class'){ui.stamp=null;ui.planEdit=false;ui.moveSid=null;}render();window.scrollTo(0,0);},
   today:function(){ui.selDate=null;afterChange();},
   dateSheet:function(){openSheet({type:'date'});},
   dset:function(el){ui.selDate=el.dataset.m==='none'?'':null;closeSheet();afterChange();},
   courseSwitch:function(){openSheet({type:'course'});},
   setCourse:function(el){
-    ui.sel=[];
+    ui.sel=[];ui.planEdit=false;ui.moveSid=null;
     state.settings.activeCourse=el.dataset.id;save();ui.stamp=null;closeSheet();
     if(el.dataset.go)ui.tab='class';
     render();window.scrollTo(0,0);
@@ -2007,6 +2148,17 @@ var A={
   gotoCourses:function(){closeSheet();ui.tab='more';render();window.scrollTo(0,0);},
   newCourse:newCourse,
   editCourse:function(el){editCourse(el.dataset.id);},
+  planEdit:function(){ui.planEdit=!ui.planEdit;ui.moveSid=null;if(ui.planEdit){ui.stamp=null;ui.sel=[];}render();},
+  seatTap:function(el){
+    if(Date.now()-dnd.doneAt<400)return;
+    var sid=el.dataset.sid;
+    if(!ui.moveSid){ui.moveSid=sid;}
+    else if(ui.moveSid===sid){ui.moveSid=null;}
+    else{var from=ui.moveSid;ui.moveSid=null;planMove(from,sid);return;}
+    refreshGrid();
+  },
+  slotTap:function(el){if(ui.moveSid){var from=ui.moveSid;ui.moveSid=null;planMove(from,+el.dataset.slot);}},
+  poolTap:function(el,e){if(ui.moveSid&&!(e.target.closest&&e.target.closest('.seat'))){var from=ui.moveSid;ui.moveSid=null;planMove(from,'pool');}},
   tile:function(el,e){
     var sid=el.dataset.sid;
     if(lp.fired){lp.fired=false;return;}
@@ -2158,12 +2310,70 @@ document.addEventListener('click',function(e){
 var lp={t:null,fired:false,x:0,y:0};
 document.addEventListener('pointerdown',function(e){
   var t=e.target.closest&&e.target.closest('.tile');
-  if(!t||e.pointerType==='mouse'||ui.sheet||ui.view)return;
+  if(!t||e.pointerType==='mouse'||ui.sheet||ui.view||planEditing())return;
   lp.fired=false;lp.x=e.clientX;lp.y=e.clientY;clearTimeout(lp.t);
   lp.t=setTimeout(function(){lp.fired=true;buzz(20);comboToggle('class',t.dataset.sid);},450);
 });
 document.addEventListener('pointermove',function(e){if(lp.t&&(Math.abs(e.clientX-lp.x)>10||Math.abs(e.clientY-lp.y)>10)){clearTimeout(lp.t);lp.t=null;}});
 ['pointerup','pointercancel','pointerleave'].forEach(function(n){document.addEventListener(n,function(){clearTimeout(lp.t);lp.t=null;},true);});
+/* Sitzplan: Schüler:in auf einen Platz (Zahl), in die Ablage ('pool') oder gegen eine andere Person (ID) tauschen */
+function planMove(sid,target){
+  var c=course(),p=c&&c.plan;if(!p)return;
+  var tsid=null,slot=null;
+  if(target==='pool'){delete p.pos[sid];}
+  else{
+    if(typeof target==='number'){
+      slot=target;
+      Object.keys(p.pos).forEach(function(id){if(p.pos[id]===slot)tsid=id;});
+      if(tsid===sid)return;
+      if(!tsid)p.pos[sid]=slot;
+    }else tsid=target;
+    if(tsid){
+      var a=p.pos[sid],b=p.pos[tsid];
+      if(b==null)delete p.pos[sid];else p.pos[sid]=b;
+      if(a==null)delete p.pos[tsid];else p.pos[tsid]=a;
+    }
+  }
+  save();refreshGrid();
+}
+/* Ziehen mit Maus und Touch (nur im Bearbeiten-Modus): Pointer Events, da HTML5-Drag&Drop auf dem Handy nicht geht */
+var dnd={sid:null,id:null,x:0,y:0,on:false,ghost:null,src:null,over:null,doneAt:0};
+function dndEnd(){
+  if(dnd.ghost)dnd.ghost.remove();
+  if(dnd.src)dnd.src.classList.remove('dragsrc');
+  if(dnd.over)dnd.over.classList.remove('over');
+  dnd.sid=null;dnd.on=false;dnd.ghost=null;dnd.src=null;dnd.over=null;
+}
+document.addEventListener('pointerdown',function(e){
+  if(!planEditing()||(e.pointerType==='mouse'&&e.button!==0))return;
+  var t=e.target.closest&&e.target.closest('.seat[data-sid]');if(!t)return;
+  dndEnd();
+  dnd.sid=t.dataset.sid;dnd.id=e.pointerId;dnd.x=e.clientX;dnd.y=e.clientY;dnd.src=t;
+});
+document.addEventListener('pointermove',function(e){
+  if(!dnd.sid||e.pointerId!==dnd.id)return;
+  if(!dnd.on){
+    if(Math.hypot(e.clientX-dnd.x,e.clientY-dnd.y)<8)return;
+    dnd.on=true;
+    var r=dnd.src.getBoundingClientRect(),g=dnd.src.cloneNode(true);
+    g.className+=' ghost';g.style.width=r.width+'px';g.removeAttribute('data-act');
+    document.body.appendChild(g);dnd.ghost=g;dnd.src.classList.add('dragsrc');
+  }
+  e.preventDefault();
+  dnd.ghost.style.transform='translate('+(e.clientX-dnd.ghost.offsetWidth/2)+'px,'+(e.clientY-dnd.ghost.offsetHeight/2)+'px)';
+  var el=document.elementFromPoint(e.clientX,e.clientY),tg=el&&el.closest?el.closest('.slot,.pool'):null;
+  if(tg!==dnd.over){if(dnd.over)dnd.over.classList.remove('over');if(tg)tg.classList.add('over');dnd.over=tg;}
+  if(e.clientY<60)window.scrollBy(0,-14);else if(e.clientY>window.innerHeight-60)window.scrollBy(0,14);
+},{passive:false});
+document.addEventListener('pointerup',function(e){
+  if(!dnd.sid||e.pointerId!==dnd.id)return;
+  var moved=dnd.on,sid=dnd.sid,tg=dnd.over;
+  dndEnd();
+  if(!moved)return;
+  dnd.doneAt=Date.now();ui.moveSid=null;
+  if(tg)planMove(sid,tg.classList.contains('pool')?'pool':+tg.dataset.slot);else refreshGrid();
+});
+document.addEventListener('pointercancel',function(){if(dnd.sid)dndEnd();});
 /* Rechtsklick (am Handy: langes Drücken) nimmt einen Eintrag weg */
 document.addEventListener('contextmenu',function(e){
   if(e.target.closest&&e.target.closest('.tile')){e.preventDefault();return;}
@@ -2203,6 +2413,10 @@ document.addEventListener('input',function(e){
   else if(b==='every')ui.draft.jokerEvery=el.value;
   else if(b==='sfirst')ui.draft.students[+el.dataset.i].first=el.value;
   else if(b==='slast')ui.draft.students[+el.dataset.i].last=el.value;
+  else if(b==='prows'||b==='pdesks'){
+    ui.draft.plan[b==='prows'?'rows':'desks']=el.value;
+    var pc=$('#planCap');if(pc)pc.textContent=planCapText(ui.draft);
+  }
   else if(b==='impText'){ui.imp.text=el.value;updateImportPreview();}
 });
 document.addEventListener('change',function(e){
@@ -2225,6 +2439,8 @@ document.addEventListener('change',function(e){
   else if(b==='impDate'){ui.imp.date=el.value||'';updateImportPreview();}
   else if(b==='impCreate'){ui.imp.create=el.checked;updateImportPreview();}
   else if(b==='stampReason'){ui.stampReason=el.value;}
+  else if(b==='cplan'){ui.draft.plan.on=el.checked;renderView();}
+  else if(b==='firstOnly'){state.settings.firstOnly=el.checked;save();afterChange();}
   else if(b==='closeAfter'){state.settings.closeAfter=el.checked;save();}
   else if(b==='haptics'){state.settings.haptics=el.checked;save();buzz(30);}
   else if(b==='wake'){state.settings.wake=el.checked;save();wakeSync();}

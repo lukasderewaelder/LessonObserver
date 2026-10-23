@@ -86,6 +86,17 @@ Die Dateien aus dem Hauptverzeichnis auf einen Webserver legen (z. B. GitHub Pag
 
 Auf großen Bildschirmen passt sich das Layout an (mehr Kacheln pro Zeile, Stempelleiste in einer Zeile, Mehr zweispaltig). Tastenkürzel im Tab „Unterricht“: `1`–`5` Wertung (`++` bis `−−`), `J` Joker, `Z` Zufallsauswahl, `/` Namen suchen, `Esc` beendet den Stempelmodus bzw. leert die Auswahl.
 
+## Sitzplan
+
+- **Einschalten:** Kurs bearbeiten → **Sitzplan-Ansicht**. Dann stellst du **Reihen** und **Doppelbänke pro Reihe** ein (jede Doppelbank hat 2 Plätze). Die Einstellung gilt pro Kurs und wird gespeichert; ausgeschaltet zeigt der Kurs wieder die Kacheln (der Plan bleibt erhalten).
+- **Ansicht:** Wie von der Lehrkraft aus gesehen – die Tafel ist unten, die vorderste Reihe direkt darüber. Beim ersten Einschalten werden die Schüler:innen alphabetisch von vorn links verteilt. Wer keinen Platz hat (zu wenige Plätze, neue Schüler:innen), liegt in der **Ablage** unter dem Plan.
+- **Umsetzen:** Im Unterricht **Plan bearbeiten** tippen, Schüler:innen auf einen freien Platz, auf eine andere Person (Plätze tauschen) oder in die Ablage ziehen. Alternativ erst die Person antippen, dann den Zielplatz. Mit **Fertig** bewertest du wieder wie gewohnt per Tippen.
+- Ändert man Reihen oder Bänke, bleiben die Plätze (Reihe und Spalte) erhalten; was wegfällt, kommt in die Ablage.
+
+## Nur Vornamen
+
+Unter **Sortierung & Ansicht** (Handy), in der Leiste über den Kacheln (PC) oder unter Mehr → Anzeige lässt sich **Nur Vornamen anzeigen** einschalten. Gleiche Vornamen werden mit dem Anfangsbuchstaben des Nachnamens ergänzt (Tom M., Tom P.); bei gleichem Anfangsbuchstaben steht der volle Nachname. Das gilt für Kacheln und Sitzplan; Auswertung, Schüler-Fenster, PDF und CSV zeigen weiter die vollen Namen.
+
 ## Kursfarben
 
 Jeder Kurs hat eine Farbe (Kurs bearbeiten → Farbe). Sie erscheint als Balken im Kopf, am aktiven Tab und in den Kurslisten.
