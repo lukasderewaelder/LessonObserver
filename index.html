@@ -90,13 +90,13 @@ select{padding-right:6px}
 .pgrid{display:flex;flex-direction:column;gap:6px;min-width:calc(var(--nc)*50px)}
 .prow{display:flex;gap:12px}
 .desk{flex:1 1 0;min-width:0;display:grid;grid-template-columns:1fr 1fr;gap:3px;padding:3px;border-radius:10px;background:var(--surface2);border:1px solid var(--line)}
-.slot{min-width:0;min-height:56px;border-radius:8px;display:flex;flex-direction:column}
+.slot{min-width:0;min-height:clamp(56px,calc((100dvh - 500px)/var(--nr,5)),96px);border-radius:8px;display:flex;flex-direction:column}
 .slot>span,.poolgrid>span.dim,.poolgrid>span{display:flex;flex-direction:column;flex:1 1 auto;min-width:0}
 .slot.empty{border:1.5px dashed var(--line);background:var(--surface)}
 .dim{opacity:.28}
-.board{margin-top:6px;text-align:center;font:700 12px/1 var(--ui);letter-spacing:.14em;text-transform:uppercase;padding:9px;border-radius:8px;background:var(--ink);color:var(--surface)}
+.board{margin-top:4px;text-align:center;font:700 11px/1 var(--ui);letter-spacing:.14em;text-transform:uppercase;padding:6px;border-radius:8px;background:var(--ink);color:var(--surface)}
 .tile.seat{padding:4px 4px 4px 6px;border-left-width:4px;gap:1px;border-radius:7px;flex:1 1 auto;min-width:0;justify-content:center}
-.seat .fn,.grid.c3 .seat .fn{font-size:13px}
+.seat .fn,.grid.c3 .seat .fn{font-size:13px;white-space:normal;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow-wrap:anywhere;hyphens:auto}
 .seat .chips{min-height:16px;margin-top:0}
 .seat .chip{height:16px;min-width:16px;padding:0 3px;font-size:10px}
 .seat .jb{padding:2px 4px;font-size:10px}.seat .jl{display:none}
@@ -1096,7 +1096,7 @@ function planBody(c,idx,dd){
     rowsHTML+='</div>';
   }
   var pool=c.students.filter(function(s){return p.pos[s.id]==null;}).sort(function(a,b){return (a.last+' '+a.first).localeCompare(b.last+' '+b.first,'de');});
-  var html='<div class="pscroll"><div class="pgrid" style="--nc:'+nc+'">'+rowsHTML+'<div class="board">Tafel</div></div></div>';
+  var html='<div class="pscroll"><div class="pgrid" style="--nc:'+nc+';--nr:'+p.rows+'">'+rowsHTML+'<div class="board">Tafel</div></div></div>';
   if(pool.length||planEditing())html+='<div class="pool" data-act="poolTap"><h3>Ablage ('+pool.length+')</h3><div class="poolgrid">'+
     (pool.length?pool.map(seat).join(''):'<span class="muted">Leer – hierher ziehen, um einen Platz freizugeben.</span>')+'</div></div>';
   return html;
@@ -1403,10 +1403,11 @@ function markerSheet(){
     (tags.length?'<p class="hint">Marker auswählen, dann die Schüler:innen antippen.</p><div class="mgrid">'+tags.map(function(t){return '<button class="act" data-act="stamp" data-k="tag:'+t.id+'">'+esc(t.name)+(t.short?' <small>'+esc(t.short)+'</small>':'')+'</button>';}).join('')+'</div>':'<p class="hint">Noch keine Marker. Lege sie unter Mehr → Weitere Marker an.</p>');
 }
 function sortSheet(){
-  var cols=state.settings.cols===3?3:2;
-  return '<div class="sh-head"><h2>Sortierung &amp; Ansicht</h2><button class="btn sm" data-act="close">Fertig</button></div>'+
+  var cols=state.settings.cols===3?3:2,cc=course(),plan=!!(cc&&cc.plan&&cc.plan.on);
+  return '<div class="sh-head"><h2>'+(plan?'Ansicht':'Sortierung &amp; Ansicht')+'</h2><button class="btn sm" data-act="close">Fertig</button></div>'+
+    (plan?'<p class="muted" style="margin:0 0 10px;font-size:13px">Sitzplan-Ansicht: Sortierung und Kacheln pro Reihe gelten nur in der Liste.</p>':
     '<div class="sec"><h3>Sortieren nach</h3><div class="mgrid">'+[['name','Nachname'],['first','Vorname'],['long','Länger nicht bewertet']].map(function(o){return '<button class="act'+(state.settings.sort===o[0]?' on':'')+'" data-act="setSort" data-m="'+o[0]+'" aria-pressed="'+(state.settings.sort===o[0])+'">'+o[1]+'</button>';}).join('')+'</div></div>'+
-    '<div class="sec"><h3>Kacheln pro Reihe</h3><div class="seg wide" role="group" style="display:grid;grid-template-columns:1fr 1fr"><button data-act="cols" data-n="2" aria-pressed="'+(cols===2)+'">2 (Standard)</button><button data-act="cols" data-n="3" aria-pressed="'+(cols===3)+'">3 (kompakt)</button></div></div>'+
+    '<div class="sec"><h3>Kacheln pro Reihe</h3><div class="seg wide" role="group" style="display:grid;grid-template-columns:1fr 1fr"><button data-act="cols" data-n="2" aria-pressed="'+(cols===2)+'">2 (Standard)</button><button data-act="cols" data-n="3" aria-pressed="'+(cols===3)+'">3 (kompakt)</button></div></div>')+
     '<label class="setrow"><span>Nur Vornamen anzeigen<small>Gleiche Vornamen werden mit dem Anfangsbuchstaben des Nachnamens ergänzt (Tom M.).</small></span><input type="checkbox" class="sw" data-bind="firstOnly"'+(state.settings.firstOnly?' checked':'')+'></label>'+
     '<div class="sec"><button class="btn block" data-act="openNachtrag">Daten nachtragen</button></div>';
 }
