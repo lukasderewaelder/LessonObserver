@@ -312,6 +312,7 @@ details.sdet{margin-top:12px}
 .stat b{display:block;font-size:22px;line-height:1.2}
 .stat span{font-size:13px;color:var(--muted)}
 .ecards{border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:16px}
+details.evlist .ecards{border:0;border-radius:0;margin-bottom:0}
 .ecard{display:grid;grid-template-columns:minmax(0,1fr) 84px 44px;gap:12px;align-items:center;text-align:left;padding:12px 16px;background:var(--surface);min-height:60px;width:100%}
 .ecard+.ecard{border-top:1px solid var(--line)}
 .ecard:active{background:var(--surface2)}
@@ -1180,7 +1181,9 @@ function evalHTML(){
   var th=function(k,l){return '<th><button data-act="tsort" data-k="'+k+'">'+l+arrow(k)+'</button></th>';};
   var distBar=function(r){return r.st.n?'<span class="dist" title="Verteilung der Bewertungen">'+r.st.dist.map(function(n,i){return n?'<i class="'+RATINGS[i].k+'" style="flex:'+n+'"></i>':'';}).join('')+'</span>':'<span class="muted">–</span>';};
   var html='<h1 class="ptitle">Auswertung</h1>'+rangeChipsHTML();
+  html+='<div class="sect expbar"><h3>Exportieren</h3><div class="row">'+[['course','Kurs&shy;übersicht'],['student','Schüler&shy;bericht'],['log','Proto&shy;koll']].map(function(k){return '<button class="btn grow" data-act="exportKind" data-k="'+k[0]+'">'+k[1]+'</button>';}).join('')+'</div></div>';
   html+='<div class="sum"><div class="stat"><b>'+tot+'</b><span>Bewertungen</span></div><div class="stat"><b>'+fmtNum(tot?sum/tot:null)+'</b><span>Ø Tendenz</span></div><div class="stat"><b>'+(rows.length-none.length)+' / '+rows.length+'</b><span>bewertet</span></div></div>';
+  html+='<details class="box sdet evlist" data-dk="evalList"'+(ui.dopen.evalList===false?'':' open')+'><summary>Schüler:innen ('+rows.length+')</summary>';
   if(isMobile()){
     html+='<div class="tbar"><label class="sel"><span>Sortieren</span><select data-bind="tsortsel" aria-label="Sortieren nach">'+
       [['name','Name'],['avg','Ø Tendenz'],['n','Bewertungen'],['jp','Joker-Punkte']].map(function(o){return '<option value="'+o[0]+'"'+(ui.tsort.k===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select></label></div>';
@@ -1199,11 +1202,11 @@ function evalHTML(){
           tags.map(function(t){return '<td>'+(r.st.tags[t.id]||'–')+'</td>';}).join('')+'</tr>';
       }).join('')+'</tbody></table></div>';
   }
+  html+='</details>';
   html+='<p class="hint" style="margin-top:10px">Ø Tendenz: ++ = 1, + = 2, ○ = 3, − = 4, −− = 5. Das ist eine Orientierung, keine Zeugnisnote. Tippe auf einen Namen für Verteilung, Verlauf und Notizen.</p>';
   var und=state.events.filter(function(e){return e.cid===c.id&&!e.date;}).length;
   if(und)html+='<p class="hint">'+und+' Einträge ohne Datum zählen nur bei „Alles“. Das Datum lässt sich im Verlauf der Person nachtragen.</p>';
   html+='<p class="hint">Joker-Punkte und Joker zeigen immer den Gesamtstand, alle anderen Werte gelten für den gewählten Zeitraum.</p>';
-  html+='<div class="row" style="margin-top:16px"><button class="btn primary grow" data-act="pdfOpen">PDF exportieren</button><button class="btn grow" data-act="exportEval">Tabelle (CSV)</button><button class="btn grow" data-act="exportLog">Protokoll (CSV)</button></div>';
   return html;
 }
 
@@ -1376,6 +1379,13 @@ function planSheet(){
     '<div class="list"><button class="lrow" data-act="planEditFromSheet"><span class="lt">Plan bearbeiten<small>Schüler:innen auf andere Plätze setzen</small></span>'+IC.next+'</button>'+
     '<button class="lrow" data-act="openNachtrag"><span class="lt">Daten nachtragen<small>Wertungen für frühere Tage erfassen</small></span>'+IC.next+'</button></div>';
 }
+function exportSheet(kind){
+  var names={course:'Kursübersicht',log:'Beobachtungsprotokoll'},sub={course:'Eine Zeile pro Schüler:in',log:'Alle Einträge chronologisch'};
+  return shHead(names[kind]||'Export',sub[kind])+
+    '<h3 style="margin-top:4px">Format wählen</h3>'+
+    '<div class="list"><button class="lrow" data-act="exportFmt" data-k="'+kind+'" data-f="pdf"><span class="lt">PDF<small>Zum Speichern, Teilen oder Drucken – Optionen im nächsten Schritt</small></span>'+IC.next+'</button>'+
+    '<button class="lrow" data-act="exportFmt" data-k="'+kind+'" data-f="csv"><span class="lt">Tabelle (CSV)<small>Für Excel oder Numbers</small></span>'+IC.next+'</button></div>';
+}
 function dateSheet(){
   var s=ui.selDate;
   return shHead('Datum für neue Einträge')+
@@ -1395,7 +1405,7 @@ function closeSheet(){ui.sheet=null;$('#sheetWrap').classList.remove('open');upd
 function renderSheet(){
   var sh=ui.sheet;if(!sh)return;
   var el=$('#sheet'),st=el.scrollTop,n=$('#noteTxt'),keep=n?n.value:'';
-  el.innerHTML=sh.type==='student'?studentSheet(sh.sid):sh.type==='date'?dateSheet():sh.type==='marker'?markerSheet():sh.type==='sort'?sortSheet():sh.type==='plan'?planSheet():sh.type==='range'?rangeSheet(sh.ctx):courseSwitchSheet();
+  el.innerHTML=sh.type==='student'?studentSheet(sh.sid):sh.type==='date'?dateSheet():sh.type==='marker'?markerSheet():sh.type==='sort'?sortSheet():sh.type==='plan'?planSheet():sh.type==='export'?exportSheet(sh.kind):sh.type==='range'?rangeSheet(sh.ctx):courseSwitchSheet();
   var n2=$('#noteTxt');if(n2&&keep)n2.value=keep;
   el.scrollTop=st;
 }
@@ -1891,10 +1901,10 @@ function loadPdfLibs(){
   return pdfLibP;
 }
 function pdfRevoke(){var p=ui.pdf;if(p&&p.res&&p.res.url){try{URL.revokeObjectURL(p.res.url);}catch(e){}}if(p)p.res=null;}
-function pdfOpen(sid){
+function pdfOpen(sid,type){
   var c=course();
   if(!c){toast('Lege zuerst einen Kurs an.');return;}
-  ui.pdf={type:'student',cid:c.id,sel:sid?[sid]:[],range:{p:ui.range.p,from:ui.range.from,to:ui.range.to},opt:{dist:1,trend:1,jm:1,notes:1,detail:0,rates:1},group:1,res:null,busy:false,err:''};
+  ui.pdf={type:type||'student',cid:c.id,sel:sid?[sid]:[],range:{p:ui.range.p,from:ui.range.from,to:ui.range.to},opt:{dist:1,trend:1,jm:1,notes:1,detail:0,rates:1},group:1,res:null,busy:false,err:''};
   ui.view={type:'pdf'};closeSheet();el_scrollTop0();renderView();
 }
 function pdfStudents(){
@@ -2146,6 +2156,8 @@ var A={
   markerSheet:function(){openSheet({type:'marker'});},
   sortSheet:function(){openSheet({type:'sort'});},
   planSheet:function(){openSheet({type:'plan'});},
+  exportKind:function(el){var k=el.dataset.k;if(k==='student')pdfOpen(null,'student');else openSheet({type:'export',kind:k});},
+  exportFmt:function(el){var k=el.dataset.k,f=el.dataset.f;closeSheet();if(f==='pdf')pdfOpen(null,k);else if(k==='log')exportLog();else exportEval();},
   planEditFromSheet:function(){closeSheet();A.planEdit();},
   setSort:function(el){state.settings.sort=el.dataset.m;save();renderMain();renderSheet();},
   sheetNav:function(el){sheetNav(+el.dataset.d);},
