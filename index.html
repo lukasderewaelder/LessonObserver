@@ -179,21 +179,21 @@ body.overlay #nav{z-index:5}
 
 /* Sitzplan */
 .pscroll{overflow-x:auto;padding-bottom:4px}
-.pgrid{display:flex;flex-direction:column;gap:12px;min-width:calc(var(--nc)*52px);container-type:inline-size;--seat-h:clamp(56px,calc(100cqi/var(--nc)*.56),100px)}
+.pgrid{display:grid;grid-template-rows:repeat(var(--nr),1fr) auto;gap:12px;min-width:calc(var(--nc)*52px);container-type:inline-size;--seat-h:clamp(56px,calc(100cqi/var(--nc)*.56),100px)}
 .prow{display:grid;grid-template-columns:repeat(var(--nd),minmax(0,1fr));gap:clamp(8px,2.2cqi,22px);min-height:var(--seat-h)}
 .desk{position:relative;min-width:0;display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:12px;background:var(--surface2);border:1px solid var(--line)}
 .slot{min-width:0;border-radius:8px;display:flex;flex-direction:column}
 .slot>span,.poolgrid>span{display:flex;flex-direction:column;flex:1 1 auto;min-width:0}
-.slot.empty{border:1px dashed var(--line2);background:var(--surface);min-height:48px}
+.slot.empty{border:1px dashed var(--line2);background:var(--surface);min-height:48px;padding:0;text-align:left}
 .dim{opacity:.3}
 .board{margin-top:4px;text-align:center;font-size:13px;letter-spacing:.2em;text-transform:uppercase;padding:10px;border-radius:12px;background:var(--ink);color:var(--bg)}
 .tile.seat{padding:6px 4px;min-height:48px;gap:2px;border-radius:8px;flex:1 1 auto;min-width:0;justify-content:center;align-items:center;text-align:center}
 .tile.seat::before{display:none}
-.pgrid .seat .fn,.poolgrid .seat .fn{font-size:clamp(12px,calc(100cqi/var(--nc)*.15),17px)}
+.pgrid .seat .fn,.poolgrid .seat .fn{font-size:clamp(11px,calc(100cqi/var(--nc)*.15),17px)}
 .poolgrid .seat .fn{font-size:14px}
 .seat .frow{justify-content:center;max-width:100%}
 .seat .jb{position:absolute;top:-7px;right:-3px;font-size:10px;padding:2px 4px;background:var(--surface)}.seat .jl{display:none}
-.seat .chips{min-height:16px;margin-top:0;justify-content:center}
+.seat .chips{min-height:16px;margin-top:0;justify-content:center}.seat .chips:empty{display:none}
 .seat .chip{height:16px;min-width:16px;padding:0 3px;font-size:10px}
 .pool{margin-top:16px;padding:12px;border-radius:12px;border:1px dashed var(--line2)}
 .pool h3{margin:0 0 8px;font-size:14px;color:var(--muted)}
@@ -440,6 +440,7 @@ table.tbl{border-collapse:separate;border-spacing:0;width:100%;font-size:14px}
 @media (max-width:699px){
   body.hide-hdr #hdr{transform:translateY(-100%)}
 }
+@media (max-width:699px){.plan{margin:0 -6px}.desk{gap:3px;padding:3px}.tile.seat{padding:4px 1px}}
 /* Tablet und größer */
 @media (min-width:700px){
   .sheet{top:50%;bottom:auto;transform:translateY(-50%);border-radius:20px;max-height:88vh;animation:none;box-shadow:0 12px 48px rgba(0,0,0,.3)}
