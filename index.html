@@ -881,7 +881,7 @@ function comboKey(e,inp){
 
 /* ───────── Anzeige: Kopf & Tabs ───────── */
 var TABS=[['class','Unterricht'],['eval','Auswertung'],['more','Mehr']];
-var IC={cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="ic"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>',chev:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true" class="ic sm"><path d="M6 9l6 6 6-6"/></svg>',search:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="ic"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>',sort:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="ic"><path d="M7 4v16M3.5 16.5L7 20l3.5-3.5M14 6h6l-6 5h6M14 20v-4l3-4 3 4v4M14 18h6" transform="translate(0 0)"/></svg>',tag:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="ic"><path d="M3.5 12.5V4.5h8l9 9-8 8z"/><circle cx="8" cy="9" r="1.3" fill="currentColor"/></svg>'};
+var IC={cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="ic"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>',chev:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true" class="ic sm"><path d="M6 9l6 6 6-6"/></svg>',search:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="ic"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>',dots:'<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" class="ic"><circle cx="5.5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="18.5" cy="12" r="1.8"/></svg>',sort:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="ic"><path d="M7 4v16M3.5 16.5L7 20l3.5-3.5M14 6h6l-6 5h6M14 20v-4l3-4 3 4v4M14 18h6" transform="translate(0 0)"/></svg>',tag:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="ic"><path d="M3.5 12.5V4.5h8l9 9-8 8z"/><circle cx="8" cy="9" r="1.3" fill="currentColor"/></svg>'};
 Object.assign(IC,{
   close:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true" class="ic"><path d="M6 6l12 12M18 6L6 18"/></svg>',
   next:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="ic sm"><path d="M9 6l6 6-6 6"/></svg>',
@@ -1039,8 +1039,8 @@ function classHTML(){
   var fo='<label class="fo"><input type="checkbox" class="sw" data-bind="firstOnly"'+(state.settings.firstOnly?' checked':'')+'><span>Nur Vornamen</span></label>';
   if(c.plan.on){
     var ed=planEditing();
-    html+='<div class="tbar planbar"><button class="btn'+(ed?' primary':'')+'" data-act="planEdit" aria-pressed="'+ed+'">'+(ed?'Fertig':'Plan bearbeiten')+'</button>'+
-      (ed?'<span class="muted phint">Schüler:innen ziehen oder antippen und dann den Zielplatz antippen.</span>':'<button class="btn deskonly" data-act="openNachtrag">Nachtragen</button>')+
+    html+='<div class="tbar planbar">'+(ed?'<button class="btn primary" data-act="planEdit" aria-pressed="true">Fertig</button>':'<button class="sortbtn" data-act="planSheet" aria-label="Sitzplan-Menü" aria-haspopup="dialog">'+IC.dots+'</button>')+
+      (ed?'<span class="muted phint">Schüler:innen ziehen oder antippen und dann den Zielplatz antippen.</span>':'')+
       '<span class="deskonly">'+fo+'</span>'+(ed?'':'<div class="selbar">'+comboHTML('class')+'</div>')+'</div>';
     html+='<div id="plan" class="plan'+(ed?' edit':'')+'">'+planBody(c,idx,dd)+'</div>';
     return html;
@@ -1362,6 +1362,11 @@ function sortSheet(){
     '<div class="sec"><h3>Namen</h3><div class="seg" role="group"><button data-act="nameMode" data-m="first" aria-pressed="'+(!!s.firstOnly)+'">Nur Vorname</button><button data-act="nameMode" data-m="full" aria-pressed="'+(!s.firstOnly)+'">Vor- und Nachname</button></div></div>'+
     '<div class="sec"><button class="btn block" data-act="openNachtrag">Daten nachtragen</button></div>';
 }
+function planSheet(){
+  return shHead('Sitzplan')+
+    '<div class="list"><button class="lrow" data-act="planEditFromSheet"><span class="lt">Plan bearbeiten<small>Schüler:innen auf andere Plätze setzen</small></span>'+IC.next+'</button>'+
+    '<button class="lrow" data-act="openNachtrag"><span class="lt">Daten nachtragen<small>Wertungen für frühere Tage erfassen</small></span>'+IC.next+'</button></div>';
+}
 function dateSheet(){
   var s=ui.selDate;
   return shHead('Datum für neue Einträge')+
@@ -1381,7 +1386,7 @@ function closeSheet(){ui.sheet=null;$('#sheetWrap').classList.remove('open');upd
 function renderSheet(){
   var sh=ui.sheet;if(!sh)return;
   var el=$('#sheet'),st=el.scrollTop,n=$('#noteTxt'),keep=n?n.value:'';
-  el.innerHTML=sh.type==='student'?studentSheet(sh.sid):sh.type==='date'?dateSheet():sh.type==='marker'?markerSheet():sh.type==='sort'?sortSheet():sh.type==='range'?rangeSheet(sh.ctx):courseSwitchSheet();
+  el.innerHTML=sh.type==='student'?studentSheet(sh.sid):sh.type==='date'?dateSheet():sh.type==='marker'?markerSheet():sh.type==='sort'?sortSheet():sh.type==='plan'?planSheet():sh.type==='range'?rangeSheet(sh.ctx):courseSwitchSheet();
   var n2=$('#noteTxt');if(n2&&keep)n2.value=keep;
   el.scrollTop=st;
 }
@@ -2131,6 +2136,8 @@ var A={
   },
   markerSheet:function(){openSheet({type:'marker'});},
   sortSheet:function(){openSheet({type:'sort'});},
+  planSheet:function(){openSheet({type:'plan'});},
+  planEditFromSheet:function(){closeSheet();A.planEdit();},
   setSort:function(el){state.settings.sort=el.dataset.m;save();renderMain();renderSheet();},
   sheetNav:function(el){sheetNav(+el.dataset.d);},
   stamp:function(el){
