@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Mitarbeit">
 <meta name="format-detection" content="telephone=no">
-<meta name="app-version" content="2026-10-24.1">
+<meta name="app-version" content="2026-10-24.2">
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#121212" media="(prefers-color-scheme: dark)">
@@ -21,12 +21,12 @@
   --ui:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
   --bg:#FFFFFF; --surface:#FFFFFF; --surface2:#F5F5F3; --ink:#1B1B1A; --muted:#6A6A66; --line:#E6E6E3; --line2:#CFCFCB;
   --r2:#2E7D5A; --r1:#5E8E4B; --r0:#7B7F86; --rm1:#B8702C; --rm2:#B3463C; --on-r:#FFFFFF;
-  --danger:#B3261E;
+  --danger:#B3261E; --joker:#A87400; --joker-soft:#FFF3CC;
   --cc:#6A6A66; --wrap:1100px; --navh:calc(56px + env(safe-area-inset-bottom)); --dockh:0px;
 }
 @media (prefers-color-scheme:dark){
   :root{--bg:#121212;--surface:#181818;--surface2:#1F1F1E;--ink:#ECECEA;--muted:#9C9C97;--line:#2A2A28;--line2:#3D3D3A;
-        --r2:#4FAE85;--r1:#86B873;--r0:#9A9EA5;--rm1:#D9954F;--rm2:#D9695E;--on-r:#121212;--danger:#F2766E}
+        --r2:#4FAE85;--r1:#86B873;--r0:#9A9EA5;--rm1:#D9954F;--rm2:#D9695E;--on-r:#121212;--danger:#F2766E;--joker:#E6B43E;--joker-soft:#3A2F09}
 }
 .r2{--c:var(--r2)} .r1{--c:var(--r1)} .r0{--c:var(--r0)} .rm1{--c:var(--rm1)} .rm2{--c:var(--rm2)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;font-weight:400}
@@ -163,11 +163,11 @@ body.overlay #nav{z-index:5}
 .name{display:flex;flex-direction:column;gap:2px;min-width:0}
 .chips{display:flex;align-items:center;gap:4px;flex-wrap:wrap;min-height:22px;margin-top:auto}
 .chip{display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:22px;padding:0 6px;border-radius:6px;border:1px solid var(--c,var(--line2));color:var(--c,var(--muted));font-style:normal;font-size:13px;line-height:1;white-space:nowrap}
-.chip.jk{border-color:var(--ink);color:var(--ink)}
+.chip.jk{border-color:var(--joker);color:var(--joker);background:var(--joker-soft)}
 .chip.tg,.chip.st{border-color:var(--line2);color:var(--muted)}
 .chip.more{border-color:transparent;color:var(--muted);min-width:0;padding:0 2px}
-.jb{flex:0 0 auto;font-size:12px;line-height:1;padding:3px 6px;border-radius:6px;border:1px solid var(--ink);color:var(--ink);white-space:nowrap}
-.jst{margin-left:auto;flex:0 0 auto;font-size:12px;color:var(--muted);white-space:nowrap}
+.jb{flex:0 0 auto;font-size:12px;line-height:1;padding:3px 6px;border-radius:6px;border:1px solid var(--joker);color:var(--joker);background:var(--joker-soft);white-space:nowrap}
+.jst{margin-left:auto;flex:0 0 auto;font-size:12px;color:var(--joker);white-space:nowrap}
 @keyframes stamp{0%{transform:scale(1)}35%{transform:scale(.95)}100%{transform:scale(1)}}
 .tile.flash{animation:stamp .25s ease-out}
 @media (prefers-reduced-motion:reduce){.tile.flash{animation:none}}
@@ -192,7 +192,7 @@ body.overlay #nav{z-index:5}
 .pgrid .seat .fn,.poolgrid .seat .fn{font-size:clamp(11px,calc(100cqi/var(--nc)*.15),17px)}
 .poolgrid .seat .fn{font-size:14px}
 .seat .frow{justify-content:center;max-width:100%}
-.seat .jb{position:absolute;top:-7px;right:-3px;font-size:10px;padding:2px 4px;background:var(--surface)}.seat .jl{display:none}
+.seat .jb{position:absolute;top:-7px;right:-3px;font-size:10px;padding:2px 4px;background:var(--joker-soft)}.seat .jl{display:none}
 .seat .chips{min-height:16px;margin-top:0;justify-content:center}.seat .chips:empty{display:none}
 .seat .chip{height:16px;min-width:16px;padding:0 3px;font-size:10px}
 .pool{margin-top:16px;padding:12px;border-radius:12px;border:1px dashed var(--line2)}
@@ -226,6 +226,8 @@ body.nodock #dock{display:none}
 .xb svg{width:18px;height:18px}
 .xb:active{background:var(--surface2)}
 .xb.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.xb.joker{border-color:var(--joker);color:var(--joker)}
+.xb.joker.on{background:var(--joker);border-color:var(--joker);color:var(--on-r)}
 .xrow{display:none}
 .xs{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 14px;border-radius:12px;border:1px solid var(--line2);background:var(--surface);font-size:14px;white-space:nowrap}
 .xs.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
@@ -234,6 +236,7 @@ body.nodock #dock{display:none}
 /* Toast */
 #toast{position:fixed;left:50%;bottom:calc(var(--navh) + var(--dockh) + 12px);transform:translateX(-50%);z-index:70;display:none;align-items:center;gap:12px;width:max-content;max-width:min(92vw,520px);padding:10px 12px 10px 16px;border-radius:12px;background:var(--ink);color:var(--bg);font-size:15px;box-shadow:0 6px 24px rgba(0,0,0,.25)}
 #toast.show{display:flex}
+#toast.gold{background:var(--joker);color:var(--on-r)}
 #toast button{padding:6px 12px;min-height:36px;border-radius:8px;border:1px solid currentColor;white-space:nowrap}
 body.nodock #toast{bottom:calc(var(--navh) + 12px)}
 body.overlay #toast{bottom:auto;top:calc(env(safe-area-inset-top) + 12px)}
@@ -266,12 +269,13 @@ body.view-open #toast{top:auto;bottom:calc(16px + env(safe-area-inset-bottom))}
 .act:active,.rchip:active{background:var(--surface2)}
 .act.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .act:disabled{opacity:.4}
+[data-act=sjoker],[data-act=pjoker]{border-color:var(--joker);color:var(--joker);background:var(--joker-soft)}
 .act small{opacity:.7}
 .mgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
 .mgrid .act{min-height:52px}
 .today{display:flex;gap:8px;flex-wrap:wrap;min-height:32px;align-items:center}
 .tchip{display:inline-flex;align-items:center;gap:4px;min-height:32px;padding:0 4px 0 10px;border-radius:8px;border:1px solid var(--c,var(--line2));color:var(--c,var(--ink));font-size:14px}
-.tchip.jk{border-color:var(--ink);color:var(--ink)}
+.tchip.jk{border-color:var(--joker);color:var(--joker);background:var(--joker-soft)}
 .tchip.tg,.tchip.st{border-color:var(--line2);color:var(--muted)}
 .tchip i{font-style:normal;width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;border-radius:6px;font-size:16px;cursor:pointer}
 details.sdet{margin-top:12px}
