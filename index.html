@@ -144,6 +144,7 @@ body.overlay #nav{z-index:5}
 .planbar{justify-content:flex-start}
 .phint{font-size:13px;flex:1 1 180px}
 .planbar .deskonly{display:none}
+.planfab{display:none}
 .banner{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:12px 14px;margin-bottom:12px;border:1px solid var(--line2);background:var(--surface2);border-radius:12px;font-size:14px;line-height:1.4}
 .banner>span{flex:1 1 220px}
 .banner.warn{border-color:var(--danger)}
@@ -444,7 +445,14 @@ table.tbl{border-collapse:separate;border-spacing:0;width:100%;font-size:14px}
 @media (max-width:699px){
   body.hide-hdr #hdr{transform:translateY(-100%)}
 }
-@media (max-width:699px){.plan{margin:0 -6px}.desk{gap:3px;padding:3px}.tile.seat{padding:4px 1px}}
+@media (max-width:699px){
+  .planbar.idle{display:none}
+  .planfab{display:flex;position:fixed;right:16px;bottom:calc(var(--navh) + var(--dockh) + 12px);z-index:14;align-items:center;justify-content:center;min-height:52px;box-shadow:0 4px 16px rgba(0,0,0,.25)}
+  .planfab.dots{width:52px;border-radius:50%;border:1px solid var(--line2);background:var(--surface);color:var(--ink)}
+  .planfab.btn{padding:0 24px;border-radius:26px}
+  body.overlay .planfab{z-index:5}
+}
+@media (max-width:699px){.plan{margin:0 -6px 64px}.desk{gap:3px;padding:3px}.tile.seat{padding:4px 1px}}
 /* Tablet und größer */
 @media (min-width:700px){
   .sheet{top:50%;bottom:auto;transform:translateY(-50%);border-radius:20px;max-height:88vh;animation:none;box-shadow:0 12px 48px rgba(0,0,0,.3)}
@@ -1039,10 +1047,11 @@ function classHTML(){
   var fo='<label class="fo"><input type="checkbox" class="sw" data-bind="firstOnly"'+(state.settings.firstOnly?' checked':'')+'><span>Nur Vornamen</span></label>';
   if(c.plan.on){
     var ed=planEditing();
-    html+='<div class="tbar planbar">'+(ed?'<button class="btn primary" data-act="planEdit" aria-pressed="true">Fertig</button>':'<button class="sortbtn" data-act="planSheet" aria-label="Sitzplan-Menü" aria-haspopup="dialog">'+IC.dots+'</button>')+
+    html+='<div class="tbar planbar'+(ed?'':' idle')+'">'+(ed?'<button class="btn primary deskonly" data-act="planEdit" aria-pressed="true">Fertig</button>':'<button class="sortbtn deskonly" data-act="planSheet" aria-label="Sitzplan-Menü" aria-haspopup="dialog">'+IC.dots+'</button>')+
       (ed?'<span class="muted phint">Schüler:innen ziehen oder antippen und dann den Zielplatz antippen.</span>':'')+
       '<span class="deskonly">'+fo+'</span>'+(ed?'':'<div class="selbar">'+comboHTML('class')+'</div>')+'</div>';
     html+='<div id="plan" class="plan'+(ed?' edit':'')+'">'+planBody(c,idx,dd)+'</div>';
+    html+=ed?'<button class="btn primary planfab" data-act="planEdit" aria-pressed="true">Fertig</button>':'<button class="planfab dots" data-act="planSheet" aria-label="Sitzplan-Menü" aria-haspopup="dialog">'+IC.dots+'</button>';
     return html;
   }
   html+='<div class="tbar deskbar"><label class="sel"><select data-bind="sort" aria-label="Sortierung">'+
