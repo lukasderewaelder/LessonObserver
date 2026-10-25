@@ -6,6 +6,7 @@
     r2: [15, 122, 99], r1: [47, 143, 106], r0: [110, 121, 140], rm1: [184, 101, 26], rm2: [192, 57, 43],
     ink: [23, 32, 47], muted: [88, 98, 117], line: [213, 219, 228], soft: [243, 245, 248], brand: [37, 64, 107]
   };
+  var LINE_MIN = 20; /* ab so vielen Bewertungen Linien- statt Balkendiagramm (wie in index.html) */
   var KEYS = ['r2', 'r1', 'r0', 'rm1', 'rm2'];
   var VALS = [2, 1, 0, -1, -2];
   var NAMES = ['sehr gut', 'gut', 'mittel', 'schwach', 'sehr schwach'];
@@ -125,7 +126,7 @@
       y += 3;
 
       var bw = (CW - 8) / 3, bh = 21;
-      [['Bewertungen', String(st.n), ''], ['Ø Tendenz', num(st.avg), 'Orientierung'], ['Joker-Punkte', String(jk.pts), jk.avail + ' Joker verfügbar']].forEach(function (b, i) {
+      [['Bewertungen', String(st.n), ''], ['Ø Tendenz', num(st.avg), ctx.opt.cavg ? 'Ø Kurs: ' + num(ctx.courseAvg) : 'Orientierung'], ['Joker-Punkte', String(jk.pts), jk.avail + ' Joker verfügbar']].forEach(function (b, i) {
         var x = M + i * (bw + 4);
         doc.setFillColor.apply(doc, C.soft); doc.setDrawColor.apply(doc, C.line); doc.setLineWidth(0.3);
         doc.roundedRect(x, y, bw, bh, 2, 2, 'FD');
@@ -162,28 +163,61 @@
       }
 
       if (ctx.opt.trend) {
-        var rs = evs.filter(function (e) { return e.type === 'rate'; }).slice(-40);
-        need(60); heading(doc, 'Zeitlicher Verlauf', M, y, CW); y += 5;
+        var rs = evs.filter(function (e) { return e.type === 'rate'; });
+        var asLine = rs.length >= LINE_MIN;
+        rs = rs.slice(asLine ? -100 : -40);
+        var cav = ctx.opt.cavg && ctx.courseAvg != null ? ctx.courseAvg : null;
+        need(asLine ? 76 : 66); heading(doc, 'Zeitlicher Verlauf', M, y, CW); y += 5;
         if (rs.length < 3) {
           doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5); doc.setTextColor.apply(doc, C.muted);
           doc.text('Zu wenige Bewertungen für einen Verlauf (mindestens 3 nötig).', M, y + 5); y += 12;
         } else {
-          var cx = M + 22, cw = CW - 22, ch = 40, mid = y + ch / 2;
+          var cx = M + 22, cw = CW - 22, ch = asLine ? 44 : 40, mid = y + ch / 2;
+          var yBar = function (g) { return mid - (3 - g) * 8; }, yLine = function (g) { return y + (g - 1) / 4 * ch; };
+          var yOf = asLine ? yLine : yBar;
           doc.setDrawColor.apply(doc, C.line); doc.setLineWidth(0.25);
-          [-2, -1, 0, 1, 2].forEach(function (v) { doc.line(cx, mid - v * 8, cx + cw, mid - v * 8); });
           doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor.apply(doc, C.muted);
-          doc.text('sehr gut', cx - 2, mid - 16 + 1, { align: 'right' }); doc.text('mittel', cx - 2, mid + 1, { align: 'right' }); doc.text('sehr schwach', cx - 2, mid + 16 + 1, { align: 'right' });
-          var slot = cw / rs.length, bwd = Math.min(5, slot * 0.7);
-          rs.forEach(function (e, k) {
-            var h = e.val === 0 ? 1.4 : Math.abs(e.val) * 8, x = cx + k * slot + (slot - bwd) / 2;
-            doc.setFillColor.apply(doc, C[KEYS[2 - e.val]]);
-            doc.rect(x, e.val >= 0 ? mid - h - (e.val === 0 ? 0.7 : 0) : mid, bwd, h, 'F');
-          });
-          doc.setTextColor.apply(doc, C.muted);
+          if (asLine) {
+            for (var g = 1; g <= 5; g++) {
+              doc.line(cx, yLine(g), cx + cw, yLine(g));
+              doc.text(g + '  ' + SYMS[g - 1], cx - 2, yLine(g) + 1, { align: 'right' });
+            }
+            var px = function (k) { return cx + 2 + (rs.length > 1 ? k * (cw - 4) / (rs.length - 1) : (cw - 4) / 2); };
+          } else {
+            [-2, -1, 0, 1, 2].forEach(function (v) { doc.line(cx, mid - v * 8, cx + cw, mid - v * 8); });
+            doc.text('sehr gut', cx - 2, mid - 16 + 1, { align: 'right' }); doc.text('mittel', cx - 2, mid + 1, { align: 'right' }); doc.text('sehr schwach', cx - 2, mid + 16 + 1, { align: 'right' });
+          }
+          var dashed = function (g, col, lw, pat) {
+            doc.setDrawColor.apply(doc, col); doc.setLineWidth(lw); doc.setLineDashPattern(pat, 0);
+            doc.line(cx, yOf(g), cx + cw, yOf(g)); doc.setLineDashPattern([], 0);
+          };
+          if (asLine) {
+            doc.setDrawColor.apply(doc, C.brand); doc.setLineWidth(0.5);
+            for (var k = 1; k < rs.length; k++) doc.line(px(k - 1), yLine(3 - rs[k - 1].val), px(k), yLine(3 - rs[k].val));
+            rs.forEach(function (e, k) { doc.setFillColor.apply(doc, C[KEYS[2 - e.val]]); doc.circle(px(k), yLine(3 - e.val), 0.9, 'F'); });
+          } else {
+            var slot = cw / rs.length, bwd = Math.min(5, slot * 0.7);
+            rs.forEach(function (e, k) {
+              var h = e.val === 0 ? 1.4 : Math.abs(e.val) * 8, x = cx + k * slot + (slot - bwd) / 2;
+              doc.setFillColor.apply(doc, C[KEYS[2 - e.val]]);
+              doc.rect(x, e.val >= 0 ? mid - h - (e.val === 0 ? 0.7 : 0) : mid, bwd, h, 'F');
+            });
+          }
+          if (cav != null) dashed(cav, C.muted, 0.5, [0.5, 1.2]);
+          if (st.avg != null) dashed(st.avg, C.ink, 0.4, [2, 1.4]);
+          doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor.apply(doc, C.muted);
           doc.text(day(rs[0].date), cx, y + ch + 5);
           doc.text(day(rs[rs.length - 1].date), cx + cw, y + ch + 5, { align: 'right' });
-          doc.text('Letzte ' + rs.length + ' Bewertungen, chronologisch', cx + cw / 2, y + ch + 5, { align: 'center' });
-          y += ch + 12;
+          doc.text('Letzte ' + rs.length + ' Bewertungen, chronologisch' + (asLine ? ', oben = Note 1' : ''), cx + cw / 2, y + ch + 5, { align: 'center' });
+          y += ch + 8;
+          var lx = cx, sample = function (col, lw, pat, label) {
+            doc.setDrawColor.apply(doc, col); doc.setLineWidth(lw); doc.setLineDashPattern(pat, 0); doc.line(lx, y + 1.3, lx + 8, y + 1.3); doc.setLineDashPattern([], 0);
+            doc.setTextColor.apply(doc, C.muted); doc.text(label, lx + 10, y + 2);
+            lx += 12 + doc.getTextWidth(label) + 4;
+          };
+          if (st.avg != null) sample(C.ink, 0.4, [2, 1.4], 'Ø Tendenz ' + num(st.avg));
+          if (cav != null) sample(C.muted, 0.5, [0.5, 1.2], 'Ø Kurs ' + num(cav));
+          y += 8;
         }
       }
 
@@ -305,6 +339,12 @@
       doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5); doc.setTextColor.apply(doc, C.muted);
       var who = single ? stuName(ctx.students[0]) + ' · ' : '';
       doc.splitTextToSize(clean(who + 'Kurs ' + courseLabel + '   |   Zeitraum: ' + ctx.rangeText + '   |   Erstellt am ' + ctx.created), CW).forEach(function (l) { doc.text(l, M, y); y += 4.4; });
+      var per = {}, tot = 0, sum = 0;
+      ctx.students.forEach(function (s) { var q = stats(evsOf(s.id), ctx.bounds); per[s.id] = q; tot += q.n; sum += q.sum; });
+      if (ctx.opt.rates) {
+        var avgTxt = 'Ø Tendenz' + (single ? '' : ' (Auswahl)') + ': ' + num(tot ? sum / tot : null) + ' bei ' + tot + ' Bewertungen' + (ctx.opt.cavg ? '   |   Ø Kurs: ' + num(ctx.courseAvg) : '');
+        doc.text(avgTxt, M, y); y += 4.4;
+      }
       y += 3;
       var ids = {}; ctx.students.forEach(function (s) { ids[s.id] = s; });
       var keep = function (e) {
@@ -328,7 +368,7 @@
         ctx.students.forEach(function (s) {
           var mine = evs.filter(function (e) { return e.sid === s.id; });
           if (!mine.length) return;
-          body.push([{ content: stuName(s) + '  (' + mine.length + ' Einträge)', colSpan: 3, styles: { fillColor: C.soft, fontStyle: 'bold', textColor: C.brand } }]);
+          body.push([{ content: stuName(s) + '  (' + mine.length + ' Einträge' + (ctx.opt.rates && per[s.id].n ? ', Ø ' + num(per[s.id].avg) : '') + ')', colSpan: 3, styles: { fillColor: C.soft, fontStyle: 'bold', textColor: C.brand } }]);
           mine.forEach(function (e) { body.push(line(e)); });
         });
       } else evs.forEach(function (e) { body.push(line(e)); });

@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="LessonObserver">
 <meta name="format-detection" content="telephone=no">
-<meta name="app-version" content="2026-10-24.3">
+<meta name="app-version" content="2026-10-25.1">
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#121212" media="(prefers-color-scheme: dark)">
@@ -308,7 +308,7 @@ details.sdet{margin-top:12px}
 .stat{padding:12px 14px}
 .stat+.stat{border-left:1px solid var(--line)}
 .kpis .stat:nth-child(n+3){border-top:1px solid var(--line)}
-.kpis .stat:nth-child(3){border-left:0}
+.kpis .stat:nth-child(odd){border-left:0}
 .stat b{display:block;font-size:22px;line-height:1.2}
 .stat span{font-size:13px;color:var(--muted)}
 .ecards{border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:16px}
@@ -340,6 +340,10 @@ table.tbl{border-collapse:separate;border-spacing:0;width:100%;font-size:14px}
 
 /* Verlauf */
 .spark{display:block;width:auto;max-width:100%;height:64px;margin:6px 0 2px}
+.trend{display:block;width:100%;max-width:640px;height:auto;margin:6px 0 2px;color:var(--muted)}
+.tlegend{display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:6px;font-size:13px;color:var(--muted)}
+.tlegend span{display:inline-flex;align-items:center;gap:6px}
+.tlegend svg{width:22px;height:8px;flex:0 0 auto}
 .dh{font-size:13px;color:var(--muted);margin:20px 0 8px}
 .ev{display:flex;align-items:center;gap:12px;padding:8px 12px;margin-bottom:6px;border:1px solid var(--line);border-radius:12px;background:var(--surface);min-height:52px}
 .ev .chip{flex:0 0 auto;min-width:32px;height:26px}
@@ -530,7 +534,7 @@ var reduceMotion=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: 
 var storageOK=true;
 function defaults(){
   return {v:1,courses:[],events:[],settings:{
-    activeCourse:null,cols:2,compact:1,firstOnly:true,uiV2:1,closeAfter:true,haptics:true,wake:false,installSnooze:null,sort:'name',
+    activeCourse:null,cols:2,compact:1,firstOnly:true,uiV2:1,closeAfter:true,haptics:true,wake:false,courseAvg:false,installSnooze:null,sort:'name',
     jokerReasons:['Fleiß','Hilfsbereitschaft','Gute Idee','Besondere Leistung'],
     tags:[{id:'t1',name:'HA fehlt',short:'HA'},{id:'t2',name:'Material fehlt',short:'Mat'},{id:'t3',name:'Störung',short:'St'}],
     lastBackup:null,backupSnooze:null
@@ -740,6 +744,15 @@ function stats(evs,lo,hi){
   return o;
 }
 function avgClass(avg){if(avg==null)return '';var i=Math.min(5,Math.max(1,Math.round(avg)))-1;return RATINGS[i].k;}
+/* Ø des ganzen Kurses (Skala 1–5: ++ = 1 … −− = 5) im Zeitraum; nur Personen, die noch im Kurs sind */
+function courseAvgStats(c,lo,hi){
+  var idx=idxFor(c.id),n=0,sum=0;
+  c.students.forEach(function(s){var st=stats(idx.get(s.id)||[],lo,hi);n+=st.n;sum+=st.sum;});
+  return {n:n,avg:n?sum/n:null};
+}
+var showCAvg=function(){return !!state.settings.courseAvg;};
+/* Ab so vielen Bewertungen zeigt der Verlauf eine Linie statt Balken */
+var LINE_MIN=20;
 
 /* ───────── Ereignisse ───────── */
 var seq=0;
@@ -1249,7 +1262,10 @@ function moreSub(m){
       '<div class="sect"><h3>Verhalten</h3><div class="list">'+
       swRow('closeAfter','Fenster nach einer Aktion schließen','Schnellster Ablauf: Kachel, Bewertung, fertig.',s.closeAfter)+
       (navigator.vibrate?swRow('haptics','Vibration beim Stempeln','Kurzes Feedback, keine Töne.',s.haptics!==false):'')+
-      ((navigator.wakeLock||NATIVE)?swRow('wake','Bildschirm anlassen','Das Display geht nicht aus, solange die App offen ist.',s.wake):'')+'</div></div>';
+      ((navigator.wakeLock||NATIVE)?swRow('wake','Bildschirm anlassen','Das Display geht nicht aus, solange die App offen ist.',s.wake):'')+'</div></div>'+
+      '<div class="sect"><h3>Auswertung</h3><div class="list">'+
+      swRow('courseAvg','Kursdurchschnitt anzeigen','Zusätzlich zum Ø der Person: Ø des ganzen Kurses in Personenansicht, Verlauf, PDF-Berichten und CSV-Export.',s.courseAvg)+'</div>'+
+      '<p class="hint" style="margin-top:8px">Ab '+LINE_MIN+' Bewertungen zeigt der Verlauf eine Linie statt Balken.</p></div>';
     return html;
   }
   if(m==='joker'){
@@ -1351,7 +1367,7 @@ function studentSheet(sid){
    '<div class="snav"><button class="navb" data-act="sheetNav" data-d="-1" aria-label="Vorherige:r Schüler:in">‹ Zurück</button><span>'+pos+' von '+list.length+'</span><button class="navb" data-act="sheetNav" data-d="1" aria-label="Nächste:r Schüler:in">Weiter ›</button></div>'+
    '<div class="today" aria-label="Heutige Einträge">'+todayChips(sid)+'</div>'+
    '<div class="sec"><h3>Mitarbeit</h3><div class="rbtns">'+RATINGS.map(function(r){return '<button class="rbtn '+r.k+'" data-act="srate" data-k="'+r.k+'"><span>'+r.sym+'</span><small>'+r.name+'</small></button>';}).join('')+'</div></div>'+
-   '<div class="sstat"><span><b>'+fmtNum(all.avg)+'</b> Ø Tendenz</span><span><b>'+all.n+'</b> Bewertungen</span><span><b>'+jk.prog+'/'+jk.every+'</b> ★ Punkte'+(jk.avail?' · <b>'+jk.avail+'</b> Joker':'')+'</span></div>'+
+   '<div class="sstat"><span><b>'+fmtNum(all.avg)+'</b> Ø Tendenz</span>'+(showCAvg()?'<span><b>'+fmtNum(courseAvgStats(c,'0000-00-00','9999-99-99').avg)+'</b> Ø Kurs</span>':'')+'<span><b>'+all.n+'</b> Bewertungen</span><span><b>'+jk.prog+'/'+jk.every+'</b> ★ Punkte'+(jk.avail?' · <b>'+jk.avail+'</b> Joker':'')+'</span></div>'+
    det('jm','Joker &amp; Marker',
      '<div class="wrap"><button class="act" data-act="sjoker" data-r="">★ +1 Punkt</button>'+
      reasons.map(function(r){return '<button class="rchip" data-act="sjoker" data-r="'+esc(r)+'">★ '+esc(r)+'</button>';}).join('')+
@@ -1421,16 +1437,44 @@ function evText(e){
   if(e.type==='note')return {chip:'<i class="chip tg">✎</i>',t:esc(e.note||'')};
   return {chip:'',t:esc(e.type)};
 }
-function sparkSVG(evs){
-  var rs=evs.filter(function(e){return e.type==='rate';}).sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:a.ts-b.ts;}).slice(-30);
-  if(rs.length<2)return '';
+/* Verlauf: bis 19 Bewertungen Balken, ab LINE_MIN eine Linie. avg/cavg = Ø der Person bzw. des Kurses (Note 1–5) als gestrichelte Linie */
+function avgLines(x1,x2,yOf,avg,cavg){
+  var o='';
+  if(cavg!=null)o+='<line x1="'+x1+'" x2="'+x2+'" y1="'+yOf(cavg)+'" y2="'+yOf(cavg)+'" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="1 3" stroke-linecap="round"/>';
+  if(avg!=null)o+='<line x1="'+x1+'" x2="'+x2+'" y1="'+yOf(avg)+'" y2="'+yOf(avg)+'" stroke="var(--ink)" stroke-width="1.2" stroke-dasharray="5 3"/>';
+  return o;
+}
+function lineSVG(rs,avg,cavg){
+  var n=rs.length,W=360,H=150,L=44,R=10,T=10,B=10,iw=W-L-R,ih=H-T-B;
+  var X=function(i){return L+(n>1?i*iw/(n-1):iw/2);},Y=function(g){return T+(g-1)/4*ih;};
+  var out='<svg class="trend" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Verlauf der Bewertungen als Liniendiagramm, Note 1 oben">';
+  RATINGS.forEach(function(r,i){
+    out+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(i+1)+'" y2="'+Y(i+1)+'" stroke="var(--line)" stroke-width="1"/>'+
+      '<text x="'+(L-6)+'" y="'+(Y(i+1)+3)+'" text-anchor="end" font-size="9" fill="currentColor">'+(i+1)+' · '+r.sym+'</text>';
+  });
+  out+=avgLines(L,W-R,Y,avg,cavg);
+  out+='<polyline fill="none" stroke="var(--ink)" stroke-width="1.4" stroke-linejoin="round" points="'+rs.map(function(e,i){return X(i).toFixed(1)+','+Y(3-e.val).toFixed(1);}).join(' ')+'"/>';
+  rs.forEach(function(e,i){out+='<circle cx="'+X(i).toFixed(1)+'" cy="'+Y(3-e.val).toFixed(1)+'" r="2.6" style="fill:var(--'+byV(e.val).k+')" stroke="var(--bg)" stroke-width="1"/>';});
+  return out+'</svg>';
+}
+function barSVG(rs,avg,cavg){
   var w=rs.length*12,mid=32,out='<svg class="spark" viewBox="0 0 '+w+' 64" role="img" aria-label="Verlauf der letzten Bewertungen"><line x1="0" x2="'+w+'" y1="'+mid+'" y2="'+mid+'" stroke="var(--line)" stroke-width="1"/>';
   rs.forEach(function(e,i){
     var h=Math.abs(e.val)*14+(e.val===0?3:0),y=e.val>=0?mid-h:mid;
     if(e.val===0)y=mid-1.5;
     out+='<rect x="'+(i*12+2)+'" y="'+y+'" width="8" height="'+h+'" rx="2" style="fill:var(--'+byV(e.val).k+')"/>';
   });
-  return out+'</svg>';
+  return out+avgLines(0,w,function(g){return mid-(3-g)*14;},avg,cavg)+'</svg>';
+}
+function trendHTML(evs,avg,cavg){
+  var rs=evs.filter(function(e){return e.type==='rate';}).sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:a.ts-b.ts;});
+  if(rs.length<2)return '';
+  var line=rs.length>=LINE_MIN,shown=rs.slice(line?-100:-30);
+  var key=function(css,txt){return '<span><svg viewBox="0 0 22 8" aria-hidden="true"><line x1="1" x2="21" y1="4" y2="4" stroke="'+css.c+'" stroke-width="'+css.w+'" stroke-dasharray="'+css.d+'" stroke-linecap="round"/></svg>'+txt+'</span>';};
+  var leg='<div class="tlegend"><span>Letzte '+shown.length+' Bewertungen, älteste links'+(line?' · oben = Note 1':'')+'</span>'+
+    (avg!=null?key({c:'var(--ink)',w:1.2,d:'5 3'},'Ø '+fmtNum(avg)):'')+
+    (cavg!=null?key({c:'var(--muted)',w:1.5,d:'1 3'},'Ø Kurs '+fmtNum(cavg)):'')+'</div>';
+  return (line?lineSVG(shown,avg,cavg):barSVG(shown,avg,cavg))+leg;
 }
 var BACKBTN='<button class="btn text" data-act="closeView">‹ Zurück</button>';
 function vhead(title,left,right){return '<div class="vhead"><div class="vl">'+(left==null?BACKBTN:left)+'</div><h2>'+title+'</h2><div class="vr">'+(right||'')+'</div></div>';}
@@ -1445,13 +1489,17 @@ function studentView(sid){
   var maxN=Math.max.apply(null,st.dist.concat([1]));
   var tagRows=Object.keys(st.tags).map(function(id){var t=state.settings.tags.filter(function(x){return x.id===id;})[0];var nm=t?t.name:(evs.filter(function(e){return e.tag===id;})[0]||{}).tn||id;return '<div class="trow"><span>'+esc(nm)+'</span><b>'+st.tags[id]+'</b></div>';}).join('');
   var notes=evs.filter(function(e){return e.type==='note';});
+  var ca=showCAvg()?courseAvgStats(c,b[0],b[1]).avg:null;
   var html=vhead(esc(fullName(s)),null,'<button class="btn text" data-act="pdfStudent" data-sid="'+sid+'">PDF</button>')+'<div class="vbody">'+
    rangeChipsHTML()+
-   '<div class="kpis"><div class="stat"><b>'+fmtNum(st.avg)+'</b><span>Ø Tendenz</span></div><div class="stat"><b>'+st.n+'</b><span>Bewertungen</span></div><div class="stat"><b>'+jk.prog+'/'+jk.every+'</b><span>Joker-Punkte</span></div>'+
+   '<div class="kpis"><div class="stat"><b>'+fmtNum(st.avg)+'</b><span>Ø Tendenz</span></div><div class="stat"><b>'+st.n+'</b><span>Bewertungen</span></div>'+
+   (showCAvg()?'<div class="stat"><b>'+fmtNum(ca)+'</b><span>Ø Kurs</span></div>':'')+
+   '<div class="stat"><b>'+jk.prog+'/'+jk.every+'</b><span>Joker-Punkte</span></div>'+
    '<div class="stat"><b>'+jk.avail+'</b><span>Joker verfügbar</span></div></div>'+
+   '<div class="list" style="margin-bottom:8px">'+swRow('courseAvg','Kursdurchschnitt anzeigen','Ø aller Schüler:innen des Kurses im gewählten Zeitraum',showCAvg())+'</div>'+
    '<p class="hint">Ø Tendenz: ++ = 1 … −− = 5. Orientierung, keine Zeugnisnote.</p>'+
    '<section class="vsec"><h3>Verteilung</h3>'+(st.n?RATINGS.map(function(r,i){var n=st.dist[i];return '<div class="drow"><i class="chip '+r.k+'">'+r.sym+'</i><span class="dbar"><i class="'+r.k+'" style="width:'+Math.round(n/maxN*100)+'%"></i></span><b>'+n+'</b><small>'+(st.n?Math.round(n/st.n*100):0)+' %</small></div>';}).join(''):'<p class="muted">Keine Bewertungen im Zeitraum.</p>')+'</section>'+
-   '<section class="vsec"><h3>Zeitlicher Verlauf</h3>'+(sparkSVG(evs)||'<p class="muted">Zu wenige Bewertungen für einen Verlauf.</p>')+'</section>'+
+   '<section class="vsec"><h3>Zeitlicher Verlauf</h3>'+(trendHTML(evs,st.avg,ca)||'<p class="muted">Zu wenige Bewertungen für einen Verlauf.</p>')+'</section>'+
    '<section class="vsec"><h3>Joker &amp; Marker</h3><div class="trow"><span>Joker-Punkte gesamt</span><b>'+jk.pts+'</b></div><div class="trow"><span>Joker eingelöst</span><b>'+jk.red+'</b></div><div class="trow"><span>Joker verfügbar</span><b>'+jk.avail+'</b></div>'+tagRows+'</section>'+
    '<section class="vsec"><h3>Notizen &amp; Bemerkungen</h3>'+(notes.length?notes.map(function(e){return '<div class="note"><small>'+fmtDate(e.date,true)+'</small><div>'+esc(e.note||'')+'</div></div>';}).join(''):'<p class="muted">Keine Notizen im Zeitraum.</p>')+'</section>'+
    '<section class="vsec"><h3>Alle Einträge ('+evs.length+')</h3>';
@@ -1904,7 +1952,7 @@ function pdfRevoke(){var p=ui.pdf;if(p&&p.res&&p.res.url){try{URL.revokeObjectUR
 function pdfOpen(sid,type){
   var c=course();
   if(!c){toast('Lege zuerst einen Kurs an.');return;}
-  ui.pdf={type:type||'student',cid:c.id,sel:sid?[sid]:[],range:{p:ui.range.p,from:ui.range.from,to:ui.range.to},opt:{dist:1,trend:1,jm:1,notes:1,detail:0,rates:1},group:1,res:null,busy:false,err:''};
+  ui.pdf={type:type||'student',cid:c.id,sel:sid?[sid]:[],range:{p:ui.range.p,from:ui.range.from,to:ui.range.to},opt:{dist:1,trend:1,jm:1,notes:1,detail:0,rates:1,cavg:showCAvg()?1:0},group:1,res:null,busy:false,err:''};
   ui.view={type:'pdf'};closeSheet();el_scrollTop0();renderView();
 }
 function pdfStudents(){
@@ -1938,9 +1986,9 @@ function pdfView(){
    (T!=='course'?'<h3>Schüler:innen <span id="pdfCount" class="muted">('+o.sel.length+' von '+sts.length+')</span></h3><div class="row" style="margin-bottom:6px"><button class="btn sm" data-act="pdfAll">Alle</button><button class="btn sm" data-act="pdfNone">Keine</button></div><div class="pdflist">'+sts.map(function(s){return '<label class="chk"><input type="checkbox" data-bind="pdfSel" data-sid="'+s.id+'"'+(o.sel.indexOf(s.id)>=0?' checked':'')+'><span>'+esc(fullName(s))+'</span></label>';}).join('')+'</div>':'<p class="hint" style="margin-top:12px">Die Kursübersicht enthält alle '+sts.length+' Schüler:innen des Kurses.</p>')+
    '<h3>Zeitraum</h3>'+rangeChipsHTML(o.range,'pdf','pdfFrom','pdfTo')+
    '<h3>Inhalte</h3>'+
-   (T==='student'?sw('dist','Verteilung der Bewertungen')+sw('trend','Zeitlicher Verlauf')+sw('jm','Joker und Marker')+sw('notes','Bemerkungen')+sw('detail','Einzelne Ereignisse','Alle Einträge als Tabelle'):
+   (T==='student'?sw('dist','Verteilung der Bewertungen')+sw('trend','Zeitlicher Verlauf','Ab '+LINE_MIN+' Bewertungen als Liniendiagramm')+sw('jm','Joker und Marker')+sw('notes','Bemerkungen')+sw('detail','Einzelne Ereignisse','Alle Einträge als Tabelle')+sw('cavg','Kursdurchschnitt anzeigen','Ø des ganzen Kurses zum Vergleich'):
     T==='course'?sw('dist','Verteilung der Bewertungen','Häufigkeiten und Balken')+sw('jm','Joker und Marker'):
-    sw('rates','Bewertungen')+sw('jm','Joker und Marker')+sw('notes','Bemerkungen')+'<label class="setrow"><span>Nach Schüler:in gruppieren<small>Sonst eine gemeinsame Liste nach Datum</small></span><input type="checkbox" class="sw" data-bind="pdfGroup"'+(o.group?' checked':'')+'></label>')+
+    sw('rates','Bewertungen')+sw('jm','Joker und Marker')+sw('notes','Bemerkungen')+sw('cavg','Kursdurchschnitt anzeigen','Ø des ganzen Kurses zum Vergleich')+'<label class="setrow"><span>Nach Schüler:in gruppieren<small>Sonst eine gemeinsame Liste nach Datum</small></span><input type="checkbox" class="sw" data-bind="pdfGroup"'+(o.group?' checked':'')+'></label>')+
    '<p class="hint" style="margin-top:10px">Das PDF wird nur auf diesem Gerät erzeugt. Es werden keine Daten an einen Server gesendet.</p>'+
    '<div class="row" style="margin:10px 0"><button class="btn primary block big" id="pdfGo" data-act="pdfGo">PDF erstellen</button></div>'+
    '<div id="pdfRes">'+pdfResHTML()+'</div></div>';
@@ -1958,7 +2006,7 @@ function pdfGo(){
   var go=$('#pdfGo');if(go)go.disabled=true;
   var t=new Date();
   loadPdfLibs().then(function(){return new Promise(function(r){setTimeout(r,40);});}).then(function(){
-    var out=window.MitarbeitPdf.build({type:o.type,courseName:c.name,subject:c.subject||'',students:students,events:evs,tags:state.settings.tags,every:c.jokerEvery,bounds:b,rangeText:rangeLabel(o.range),opt:o.opt,group:!!o.group,created:fmtDay(todayStr())});
+    var out=window.MitarbeitPdf.build({type:o.type,courseName:c.name,subject:c.subject||'',students:students,events:evs,tags:state.settings.tags,every:c.jokerEvery,bounds:b,courseAvg:courseAvgStats(c,b[0],b[1]).avg,rangeText:rangeLabel(o.range),opt:o.opt,group:!!o.group,created:fmtDay(todayStr())});
     var typ=o.type==='student'?'Schuelerbericht':o.type==='course'?'Kursuebersicht':'Protokoll';
     var name='Mitarbeit_'+typ+'_'+slug(c.name)+'_'+todayStr()+'.pdf';
     o.res={url:URL.createObjectURL(out.blob),blob:out.blob,pages:out.pages,bytes:out.bytes,bad:out.bad,name:name};
@@ -2070,6 +2118,11 @@ function exportEval(){
   var data=[head].concat(rows.map(function(r){
     return [r.s.last,r.s.first,r.st.avg==null?'':fmtNum(r.st.avg,2),r.st.n].concat(r.st.dist,[r.jk.pts,r.jk.avail,r.jk.red],tags.map(function(t){return r.st.tags[t.id]||0;}));
   }));
+  if(showCAvg()){
+    var ca=courseAvgStats(c,b[0],b[1]),ds=[0,0,0,0,0];
+    rows.forEach(function(r){r.st.dist.forEach(function(n,i){ds[i]+=n;});});
+    data.push(['Kurs gesamt','',ca.avg==null?'':fmtNum(ca.avg,2),ca.n].concat(ds));
+  }
   saveFile('Mitarbeit_'+slug(c.name)+'_'+todayStr()+'.csv','text/csv;charset=utf-8',toCSV(data));
 }
 function exportLog(){
@@ -2432,6 +2485,7 @@ document.addEventListener('change',function(e){
   else if(b==='stampReason'){ui.stampReason=el.value;}
   else if(b==='cplan'){ui.draft.plan.on=el.checked;renderView();}
   else if(b==='firstOnly'){state.settings.firstOnly=el.checked;save();afterChange();}
+  else if(b==='courseAvg'){state.settings.courseAvg=el.checked;save();afterChange();}
   else if(b==='closeAfter'){state.settings.closeAfter=el.checked;save();}
   else if(b==='haptics'){state.settings.haptics=el.checked;save();buzz(30);}
   else if(b==='wake'){state.settings.wake=el.checked;save();wakeSync();}

@@ -126,6 +126,8 @@ In **Auswertung → PDF exportieren** (oder im Schüler:in-Fenster → PDF-Beric
 - **Kursübersicht** (A4 quer): Tabelle aller Schüler:innen mit Anzahl, Ø Tendenz, Verteilung, Joker/Marker; Tabellenkopf auf jeder Seite.
 - **Beobachtungsprotokoll** (A4 hoch): chronologische Einträge mit Datum, Wertung und Bemerkung, optional nach Person gruppiert.
 
+**Verlauf und Durchschnitt:** „Ø Tendenz“ ist der Notendurchschnitt der Wertungen (++ = 1, + = 2, ○ = 3, − = 4, −− = 5). Der zeitliche Verlauf (Schülerbericht und Verlauf in der Auswertung) zeigt bis 19 Bewertungen Balken, **ab 20 Bewertungen ein Liniendiagramm** (Note 1 oben) mit gestrichelter Linie für den Ø der Person. Mit **„Kursdurchschnitt anzeigen“** (Mehr → Anzeige, im Verlauf der Person und als Option im PDF) kommt der Ø des ganzen Kurses im gewählten Zeitraum hinzu: als Kennzahl, als gepunktete Linie im Verlauf, im Beobachtungsprotokoll und als Zeile „Kurs gesamt“ im CSV der Kursübersicht.
+
 Auswahl von Kurs, Personen, Zeitraum und Inhalten; danach Speichern/Teilen oder Vorschau öffnen. Das PDF entsteht **ausschließlich im Browser** (jsPDF und AutoTable liegen unter `lib/`, MIT-Lizenz); es werden keine Daten gesendet. Es funktioniert auch offline. „Ø Tendenz“ ist in jedem Bericht als Orientierung, nicht als Zeugnisnote gekennzeichnet. Zeichen, die die PDF-Schrift nicht kann (z. B. Emoji), werden durch „?“ ersetzt und dir angezeigt.
 
 ## Updates
