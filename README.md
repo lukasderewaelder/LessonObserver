@@ -37,7 +37,7 @@ Repository → Settings → Secrets and variables → Actions: `ANDROID_KEYSTORE
 
 ## Android
 
-- **Als App installieren:** Chrome zeigt unter Mehr (und einmalig im Tab „Unterricht“) einen Knopf „Installieren“. Die installierte App hat ein eigenes Symbol, läuft im Vollbild und auch ohne Netz. Beim langen Drücken auf das Symbol gibt es die Kurzbefehle „Nachtragen“ und „Zufallsauswahl“.
+- **Als App installieren:** Chrome zeigt unter Mehr (und einmalig im Tab „Unterricht“) einen Knopf „Installieren“. Die installierte App hat ein eigenes Symbol, läuft im Vollbild und auch ohne Netz. Beim langen Drücken auf das Symbol gibt es die Kurzbefehle „Nachtragen“ und „Heutige Bewertung“.
 - **Zurück-Taste:** schließt zuerst Fenster und Auswahl, dann geht es zurück zu „Unterricht“, erst dann verlässt sie die App.
 - **Mehrere Namen:** Kachel gedrückt halten, weitere antippen, Wertung wählen – sie gilt für alle.
 - **Vibration** beim Stempeln und **Bildschirm anlassen** lassen sich unter Mehr → Anzeige ein- und ausschalten.
@@ -84,7 +84,18 @@ Die Dateien aus dem Hauptverzeichnis auf einen Webserver legen (z. B. GitHub Pag
 
 ## Bedienung am PC
 
-Auf großen Bildschirmen passt sich das Layout an (mehr Kacheln pro Zeile, Stempelleiste in einer Zeile, Mehr zweispaltig). Tastenkürzel im Tab „Unterricht“: `1`–`5` Wertung (`++` bis `−−`), `J` Joker, `Z` Zufallsauswahl, `/` Namen suchen, `Esc` beendet den Stempelmodus bzw. leert die Auswahl.
+Auf großen Bildschirmen passt sich das Layout an (mehr Kacheln pro Zeile, Stempelleiste in einer Zeile, Mehr zweispaltig). Tastenkürzel im Tab „Unterricht“: `1`–`5` Wertung (`++` bis `−−`), `J` Joker, `Z` Heutige Bewertung, `/` Namen suchen, `Esc` beendet den Stempelmodus bzw. leert die Auswahl. Überall: `Strg`+`Z` Rückgängig, `Strg`+`Y` (oder `Strg`+`Shift`+`Z`) Wiederholen.
+
+## Heutige Bewertung
+
+Der Knopf **Heute bewerten** (Taste `Z`) führt in zufälliger Reihenfolge durch alle, die am gewählten Datum noch keine Mitarbeitswertung haben.
+
+- **Ablauf:** Person wird angezeigt → Wertung antippen → **Weiter** (erst nach einer Wertung aktiv). Wer fehlt, wird mit **Nicht bewertet (abwesend)** übersprungen und kommt an diesem Tag nicht mehr dran. Sind alle durch, steht dort „Heute sind alle bewertet“. Am nächsten Tag beginnt automatisch eine neue Runde. Mit „Ohne Datum“ (Nachtragen) ist die Funktion nicht verfügbar.
+- **Vertippt?** Ein anderer Wertungsknopf **ersetzt** die Wertung (es entsteht kein zweiter Eintrag). Der gedrückte Knopf und die Farbe der Karte zeigen die aktuelle Wertung, ein Joker-Punkt färbt den Joker-Knopf golden. Mit **Rückgängig** oben springt die Ansicht zur betroffenen Person zurück, auch nach „Weiter“.
+
+## Rückgängig und Wiederholen
+
+Oben neben dem Datum (und in der Heutigen Bewertung) stehen **Rückgängig** und **Wiederholen**. Sie nehmen Aktion für Aktion zurück (Wertungen, Joker, Marker, Notizen, Löschen, Datum ändern, Nachtragen, Import, Kurs bearbeiten), bis zu 50 Schritte, auch mehrere hintereinander. Eine Mehrfachauswahl oder ein Import zählt als ein Schritt. Der Verlauf gilt bis zum Neuladen der App und wird beim Laden einer Sicherung geleert; Einstellungen (Anzeige, Marker-Liste) sind nicht Teil davon. Der Knopf „Rückgängig“ in der kurzen Meldung unten macht denselben Schritt rückgängig.
 
 ## Sitzplan
 
@@ -112,7 +123,7 @@ Jeder Kurs hat eine Farbe (Kurs bearbeiten → Farbe). Sie erscheint als Balken 
 
 - **Navigation:** Unten die Tab-Leiste Unterricht | Auswertung | Mehr, oben der Kursname (Tippen wechselt den Kurs) und das Datum für neue Einträge. „Mehr“ ist ein Menü mit Unterseiten: Kurse · Anzeige · Joker & Marker · Halbjahre · Daten & Sicherung · App & Hilfe; ‹ Mehr bzw. die Zurück-Taste führt zurück.
 - **Gestaltung:** ruhig und fast einfarbig (nur die Wertungen sind farbig), durchgehend normale Schrift ohne Fettdruck, überall dieselben Knöpfe: gefüllt = Hauptaktion, Umriss = weitere Aktion, Text = Navigation.
-- **Unterricht:** Suchfeld und Ansicht-Knopf (Sortierung, Namen, Kacheln pro Reihe, Nachtragen). Standard sind 2 Kacheln pro Reihe, kompakt 3. Die Kacheln zeigen den Vornamen (gleiche Vornamen mit Kürzel, Tom M.); lange Namen brechen um und werden nie abgeschnitten. Unten fest: fünf Wertungsknöpfe und darunter Joker | Marker | Zufall, darunter die Tab-Leiste. Wertung wählen → Schüler:in antippen.
+- **Unterricht:** Suchfeld und Ansicht-Knopf (Sortierung, Namen, Kacheln pro Reihe, Nachtragen). Standard sind 2 Kacheln pro Reihe, kompakt 3. Die Kacheln zeigen den Vornamen (gleiche Vornamen mit Kürzel, Tom M.); lange Namen brechen um und werden nie abgeschnitten. Unten fest: fünf Wertungsknöpfe und darunter Joker | Marker | Heute bewerten, darunter die Tab-Leiste. Wertung wählen → Schüler:in antippen.
 - **Schüler:in-Fenster:** Name, Kurs, Wertungen, Status, dazu einklappbar „Joker & Marker“ und „Bemerkung hinzufügen“, „Verlauf ansehen“, „PDF-Bericht“. Mit ‹ Zurück / Weiter › wechselst du durch die Liste.
 - **Nachtragen (Handy):** Eingabemaske: Person wählen → Datum → Wertungen mit −/+ erfassen. Am PC bleibt die Tabelle.
 - **Auswertung (Handy):** schlanke Liste (Name, Ø Tendenz, Anzahl, Verteilung). Antippen öffnet Verteilung, Verlauf, Joker/Marker, Notizen und alle Einträge. Der Zeitraum (Heute, 7 Tage, 30 Tage, 1. Halbjahr, 2. Halbjahr, Alles, eigener Zeitraum) wird über einen Knopf gewählt und gilt auch für das PDF.

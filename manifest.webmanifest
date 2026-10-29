@@ -18,6 +18,6 @@
   ],
   "shortcuts": [
     {"name": "Nachtragen", "short_name": "Nachtragen", "url": "./index.html?a=nachtragen", "icons": [{"src": "icon-192.png", "sizes": "192x192", "type": "image/png"}]},
-    {"name": "Zufallsauswahl", "short_name": "Zufall", "url": "./index.html?a=zufall", "icons": [{"src": "icon-192.png", "sizes": "192x192", "type": "image/png"}]}
+    {"name": "Heutige Bewertung", "short_name": "Heute", "url": "./index.html?a=heute", "icons": [{"src": "icon-192.png", "sizes": "192x192", "type": "image/png"}]}
   ]
 }

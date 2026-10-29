@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="LessonObserver">
 <meta name="format-detection" content="telephone=no">
-<meta name="app-version" content="2026-10-25.1">
+<meta name="app-version" content="2026-10-29.1">
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#121212" media="(prefers-color-scheme: dark)">
@@ -119,7 +119,10 @@ details.box>*:last-child{margin-bottom:16px}
 .cbtn .ic{color:var(--muted)}
 .datechip{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 12px;border:1px solid var(--line2);border-radius:12px;background:var(--surface);font-size:14px;white-space:nowrap;flex:0 0 auto}
 .datechip.alt{border-color:var(--ink);background:var(--surface2)}
-#main{padding:16px 16px calc(var(--navh) + var(--dockh) + 24px);max-width:var(--wrap);margin:0 auto}
+.hright{display:flex;align-items:center;gap:2px;flex:0 0 auto}
+.hright .datechip{margin-left:6px}
+.hbtn{width:40px;height:44px}
+.hbtn:disabled{opacity:.3}#main{padding:16px 16px calc(var(--navh) + var(--dockh) + 24px);max-width:var(--wrap);margin:0 auto}
 body.nodock #main{padding-bottom:calc(var(--navh) + 24px)}
 
 /* Navigation unten */
@@ -270,7 +273,7 @@ body.view-open #toast{top:auto;bottom:calc(16px + env(safe-area-inset-bottom))}
 .act:active,.rchip:active{background:var(--surface2)}
 .act.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .act:disabled{opacity:.4}
-[data-act=sjoker],[data-act=pjoker]{border-color:var(--joker);color:var(--joker);background:var(--joker-soft)}
+[data-act=sjoker]{border-color:var(--joker);color:var(--joker);background:var(--joker-soft)}
 .act small{opacity:.7}
 .mgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
 .mgrid .act{min-height:52px}
@@ -360,8 +363,16 @@ table.tbl{border-collapse:separate;border-spacing:0;width:100%;font-size:14px}
 .note{padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);margin-bottom:8px}
 .note small{color:var(--muted)}
 
-/* Zufall */
-.pickbox{text-align:center;padding:32px 8px 12px}
+/* Heutige Bewertung */
+.pickbox{text-align:center;padding:32px 8px 12px;border:2px solid transparent;border-radius:16px;transition:background .2s,border-color .2s}
+.pickbox.rated{border-color:var(--c);background:color-mix(in srgb,var(--c) 9%,var(--bg))}
+.pickbox.glow{animation:jglow .9s ease-out}
+@keyframes jglow{0%{box-shadow:0 0 0 0 var(--joker);background:var(--joker-soft)}100%{box-shadow:0 0 0 18px transparent}}
+@media (prefers-reduced-motion:reduce){.pickbox.glow{animation:none}}
+.rbtn.on{border-color:var(--c);box-shadow:inset 0 0 0 1px var(--c);background:color-mix(in srgb,var(--c) 14%,var(--surface))}
+.rbtn.on::after{left:20%;right:20%;height:4px}
+.act.joker{border-color:var(--joker);color:var(--joker)}
+.act.joker.jon{background:var(--joker-soft);box-shadow:inset 0 0 0 1px var(--joker)}
 .pickbox .fnb{font:400 clamp(38px,13vw,60px)/1.1 var(--ui);overflow-wrap:break-word;hyphens:auto}
 .pickbox .lnb{font:400 clamp(20px,6vw,28px)/1.2 var(--ui);color:var(--muted);margin-top:4px;min-height:34px}
 .pickbox .runde{font-size:13px;color:var(--muted);margin-top:16px}
@@ -580,7 +591,8 @@ function normalize(s){
     c.color=c.color||PAL[i%PAL.length];
     c.students=Array.isArray(c.students)?c.students:[];
     c.jokerEvery=Math.max(1,parseInt(c.jokerEvery,10)||5);
-    c.pickDone=Array.isArray(c.pickDone)?c.pickDone:[];
+    delete c.pickDone;
+    c.round=c.round&&Array.isArray(c.round.skip)?{d:String(c.round.d||''),skip:c.round.skip}:{d:'',skip:[]};
     c.plan=normPlan(c);
   });
   s.v=1;
@@ -593,7 +605,54 @@ function load(){
 }
 function save(){
   try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){storageOK=false;}
+  histTrack();
   snapSoon();
+}
+/* Verlauf für Rückgängig/Wiederholen: Schnappschüsse von Kursen und Einträgen (nur im Speicher, bis zum Neuladen).
+   Mehrere save() im selben Tick (Import, Mehrfachauswahl …) ergeben einen Schritt. */
+var hist={undo:[],redo:[],last:null,tick:false,busy:false};
+function histSer(){return JSON.stringify([state.courses,state.events]);}
+function histReset(){hist.undo=[];hist.redo=[];hist.last=histSer();updateUndoBtns();}
+function histTrack(){
+  var s=histSer();
+  if(!hist.busy&&hist.last!=null&&s!==hist.last&&!hist.tick){
+    hist.undo.push(hist.last);if(hist.undo.length>50)hist.undo.shift();
+    hist.redo=[];hist.tick=true;setTimeout(function(){hist.tick=false;},0);
+  }
+  hist.last=s;updateUndoBtns();
+}
+function updateUndoBtns(){
+  Array.prototype.forEach.call(document.querySelectorAll('[data-act="hundo"]'),function(b){b.disabled=!hist.undo.length;});
+  Array.prototype.forEach.call(document.querySelectorAll('[data-act="hredo"]'),function(b){b.disabled=!hist.redo.length;});
+}
+function histStep(from,to){
+  if(!from.length)return false;
+  var s=from.pop();to.push(hist.last);
+  var a=JSON.parse(s),before=state.events;
+  hist.busy=true;state.courses=a[0];state.events=a[1];save();hist.busy=false;hist.last=s;
+  var c=course(),keep=c?c.students.map(function(x){return x.id;}):[];
+  ui.sel=ui.sel.filter(function(id){return keep.indexOf(id)>=0;});
+  if(ui.sheet&&ui.sheet.sid&&keep.indexOf(ui.sheet.sid)<0)closeSheet();
+  if(ui.pick&&ui.pick.sid&&keep.indexOf(ui.pick.sid)<0){ui.pick=null;if(ui.view&&ui.view.type==='pick')ui.view=null;}
+  /* In der Heutigen Bewertung zur betroffenen Person springen, damit man sie gleich neu bewerten kann */
+  if(ui.pick&&ui.view&&ui.view.type==='pick'){
+    var was={},now={},hit=null;
+    before.forEach(function(e){was[e.id]=e.val;});
+    state.events.forEach(function(e){now[e.id]=e.val;});
+    state.events.concat(before).some(function(e){
+      if(e.type==='rate'&&keep.indexOf(e.sid)>=0&&was[e.id]!==now[e.id]){hit=e;return true;}
+      return false;
+    });
+    if(hit)ui.pick.sid=hit.sid;
+  }
+  updateUndoBtns();afterChange();
+  return true;
+}
+function undoStep(){if(histStep(hist.undo,hist.redo))toast('Rückgängig gemacht');}
+function redoStep(){if(histStep(hist.redo,hist.undo))toast('Wiederholt');}
+function undoBtnsHTML(){
+  return '<button class="iconbtn hbtn" data-act="hundo" aria-label="Rückgängig (Strg+Z)" title="Rückgängig"'+(hist.undo.length?'':' disabled')+'>'+IC.undo+'</button>'+
+    '<button class="iconbtn hbtn" data-act="hredo" aria-label="Wiederholen (Strg+Y)" title="Wiederholen"'+(hist.redo.length?'':' disabled')+'>'+IC.redo+'</button>';
 }
 /* Automatische Sicherungen: nach jeder Änderung ein Schnappschuss in IndexedDB (die letzten 20 plus je einer pro Tag der letzten 14 Tage) */
 var idbP=null,snapTimer=null,lastSnapKey='';
@@ -646,7 +705,7 @@ function snapRestoreIfLost(){
   snapList().then(function(list){
     var r=list[0];
     if(!r||state.courses.length||state.events.length)return;
-    state=normalize(JSON.parse(r.json));save();render();
+    state=normalize(JSON.parse(r.json));histReset();save();render();
     toast('Daten aus der automatischen Sicherung wiederhergestellt');
   },function(){});
 }
@@ -656,7 +715,7 @@ function snapRestore(ts){
     var when=fmtDate(ymd(new Date(r.ts)),true)+' '+p2(new Date(r.ts).getHours())+':'+p2(new Date(r.ts).getMinutes());
     if(!confirm('Stand vom '+when+' ('+r.nc+' Kurs(e), '+r.ne+' Einträge) wiederherstellen? Der aktuelle Stand wird vorher gesichert.'))return;
     snapNow(true).then(function(){
-      state=normalize(JSON.parse(r.json));lastSnapKey='';save();
+      state=normalize(JSON.parse(r.json));lastSnapKey='';histReset();save();
       ui.stamp=null;ui.sel=[];ui.view=null;ui.draft=null;ui.pick=null;renderView();closeSheet();render();toast('Sicherung vom '+when+' geladen');
     });
   });
@@ -703,6 +762,7 @@ function wakeSync(){
   }else if(wakeLock){wakeLock.release().catch(function(){});wakeLock=null;}
 }
 var state=load();
+hist.last=histSer();
 try{if(navigator.storage&&navigator.storage.persist) navigator.storage.persist();}catch(e){}
 
 /* Oberflächenzustand (wird nicht gespeichert) */
@@ -768,12 +828,12 @@ function toast(msg,undo,gold,label,ms){
   var t=$('#toast');
   t.className=gold?'show gold':'show';
   t.innerHTML='<span>'+esc(msg)+'</span>'+(undo?'<button data-act="undo">'+esc(label||'Rückgängig')+'</button>':'');
-  toast.undo=undo||null;
+  toast.undo=undo||null;toast.custom=!!label;
   clearTimeout(toast.timer);
   toast.timer=setTimeout(function(){t.className='';toast.undo=null;},ms||(undo?5500:2800));
 }
 function toastUndoIds(msg,ids,gold){
-  toast(msg,function(){state.events=state.events.filter(function(e){return ids.indexOf(e.id)<0;});save();afterChange();},gold);
+  toast(msg,true,gold);
 }
 function jInfoNow(c,sid){return jokerInfo(evsOf(c.id,sid),c.jokerEvery);}
 
@@ -785,6 +845,15 @@ function doStamp(key,sid,opt){
   var rt=RATINGS.filter(function(r){return r.k===key;})[0];
   var ev;
   if(rt){
+    if(opt.replace){
+      /* Heutige Bewertung: eine schon vorhandene Wertung desselben Tages wird ersetzt statt ergänzt */
+      var day=curDate(),ex=null;
+      state.events.forEach(function(e){if(e.cid===c.id&&e.sid===sid&&e.type==='rate'&&e.date===day&&(!ex||e.ts>ex.ts))ex=e;});
+      if(ex){
+        if(ex.val!==rt.v){ex.val=rt.v;save();TU(s.first+': '+rt.sym+' '+rt.name+' (geändert)',[ex.id]);}
+        return true;
+      }
+    }
     ev=mkEvent(sid,'rate',{val:rt.v});state.events.push(ev);save();
     TU(s.first+': '+rt.sym+' '+rt.name,[ev.id]);return true;
   }
@@ -811,17 +880,16 @@ function flash(sid){ui.flash=sid;afterChange();ui.flash=null;}
 function setEventDate(id,val){
   var e=state.events.filter(function(x){return x.id===id;})[0];
   if(!e||(e.date||'')===val)return;
-  var old={date:e.date,ts:e.ts,bd:e.bd};
   e.date=val;e.bd=1;
   e.ts=(val?new Date(val+'T12:00:00').getTime():0)+(seq++%40000)*1000;
   save();afterChange();
-  toast(val?'Datum geändert: '+fmtDate(val,true):'Datum entfernt',function(){e.date=old.date;e.ts=old.ts;if(old.bd)e.bd=old.bd;else delete e.bd;save();afterChange();});
+  toast(val?'Datum geändert: '+fmtDate(val,true):'Datum entfernt',true);
 }
 function removeEvent(id){
   var i=state.events.findIndex(function(e){return e.id===id;});
   if(i<0)return;
-  var ev=state.events.splice(i,1)[0];save();afterChange();
-  toast('Eintrag gelöscht',function(){state.events.push(ev);save();afterChange();});
+  state.events.splice(i,1);save();afterChange();
+  toast('Eintrag gelöscht',true);
 }
 
 /* ───────── Namenssuche mit Mehrfachauswahl (PC) ───────── */
@@ -908,6 +976,8 @@ Object.assign(IC,{
   close:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true" class="ic"><path d="M6 6l12 12M18 6L6 18"/></svg>',
   next:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="ic sm"><path d="M9 6l6 6-6 6"/></svg>',
   check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="ic"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  undo:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="ic"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>',
+  redo:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="ic"><path d="M15 14l5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></svg>',
   tabClass:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" class="ic"><rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/></svg>',
   tabEval:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true" class="ic"><path d="M6 20V11M12 20V5M18 20v-6"/></svg>',
   tabMore:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true" class="ic"><path d="M5 7h14M5 12h14M5 17h14"/></svg>'
@@ -921,7 +991,8 @@ function renderHeader(){
        '<span class="ctx"><span class="ct">'+(c?esc(c.name+(c.subject?' · '+c.subject:'')):'Kein Kurs')+'</span>'+
        '<span class="cs">'+(c?c.students.length+' Schüler:innen':'Lege unter „Mehr“ einen Kurs an')+'</span></span>'+IC.chev+
      '</button>'+
-     '<button class="datechip'+(isToday?'':' alt')+'" data-act="dateSheet" aria-label="Datum für neue Einträge wählen">'+IC.cal+'<span>'+(isToday?'Heute':fmtDate(dd))+'</span></button>'+
+     '<div class="hright">'+undoBtnsHTML()+
+       '<button class="datechip'+(isToday?'':' alt')+'" data-act="dateSheet" aria-label="Datum für neue Einträge wählen">'+IC.cal+'<span>'+(isToday?'Heute':fmtDate(dd))+'</span></button></div>'+
    '</div>';
 }
 function renderNav(){
@@ -1100,7 +1171,7 @@ function renderDock(){
     hint='<span class="hl"><b>'+esc(stampLabel(ui.stamp))+'</b>'+(ui.stamp==='joker'?'':' · Namen antippen')+'</span>';
     if(ui.stamp==='joker'&&reasons.length)hint+='<select data-bind="stampReason" aria-label="Grund"><option value="">ohne Grund</option>'+reasons.map(function(r){return '<option'+(ui.stampReason===r?' selected':'')+'>'+esc(r)+'</option>';}).join('')+'</select>';
     hint+='<button class="stop" data-act="stampOff">Beenden</button>';
-  }else hint='<span class="hl">Wertung wählen → Schüler antippen<span class="kbd"> · Tasten: 1–5 Wertung, J Joker, Z Zufall, / Namen suchen, Esc beenden</span></span>';
+  }else hint='<span class="hl">Wertung wählen → Schüler antippen<span class="kbd"> · Tasten: 1–5 Wertung, J Joker, Z Heutige Bewertung, / Namen suchen, Esc beenden</span></span>';
   dock.className=ui.stamp&&!ui.sel.length?'armed':'';
   if(ui.stamp||ui.sel.length)document.body.classList.remove('hide-dock');
   dock.innerHTML='<div class="dhint">'+hint+'</div>'+
@@ -1108,7 +1179,7 @@ function renderDock(){
     '<div class="xb3">'+
       '<button class="xb joker'+(ui.stamp==='joker'?' on':'')+'" data-act="stamp" data-k="joker" aria-pressed="'+(ui.stamp==='joker')+'"><span aria-hidden="true">★</span> Joker</button>'+
       '<button class="xb'+(isTag?' on':'')+'" data-act="markerSheet" aria-haspopup="dialog">'+IC.tag+' Marker</button>'+
-      '<button class="xb" data-act="pick">'+DIE+' Zufall</button>'+
+      '<button class="xb" data-act="pick">'+DIE+' Heute bewerten</button>'+
     '</div>'+
     '<div class="xrow desk">'+state.settings.tags.map(function(t){var k='tag:'+t.id;return '<button class="xs'+(ui.stamp===k?' on':'')+'" data-act="stamp" data-k="'+k+'" aria-pressed="'+(ui.stamp===k)+'">'+esc(t.name)+'</button>';}).join('')+'</div></div>';
   document.documentElement.style.setProperty('--dockh',dock.offsetHeight+'px');
@@ -1513,28 +1584,38 @@ function studentView(sid){
   return html+'</section></div>';
 }
 
-/* ───────── Vollbild: Zufallsauswahl ───────── */
-function eligible(c){
-  var d=curDate(),idx=idxFor(c.id);
-  return c.students.slice();
+/* ───────── Vollbild: Heutige Bewertung ───────── */
+/* Runde des gewählten Tages: „fertig“ = hat an dem Tag eine Mitarbeitswertung (abgeleitet aus den Einträgen, damit Rückgängig automatisch stimmt);
+   c.round.skip = an dem Tag bewusst nicht bewertet (abwesend). Am nächsten Tag beginnt automatisch eine neue Runde. */
+function roundOf(c,day){if(!c.round||c.round.d!==day)c.round={d:day,skip:[]};return c.round;}
+function dayEvents(c,sid,day,type){return state.events.filter(function(e){return e.cid===c.id&&e.sid===sid&&e.type===type&&e.date===day;});}
+function ratedOn(c,day){
+  var set=new Set();
+  state.events.forEach(function(e){if(e.cid===c.id&&e.type==='rate'&&e.date===day)set.add(e.sid);});
+  return set;
+}
+function pickPool(c,day,cur){
+  var rated=ratedOn(c,day),skip=roundOf(c,day).skip;
+  return c.students.filter(function(s){return !rated.has(s.id)&&skip.indexOf(s.id)<0&&s.id!==cur;});
 }
 function drawPick(){
-  var c=course(),el=eligible(c);
-  if(!el.length){toast('Alle Schüler:innen fehlen oder der Kurs ist leer.');return null;}
-  var done=new Set(c.pickDone||[]),pool=el.filter(function(s){return !done.has(s.id);}),fresh=false;
-  if(!pool.length){c.pickDone=[];pool=el;fresh=true;}
-  var s=pool[Math.floor(Math.random()*pool.length)];
-  c.pickDone=c.pickDone||[];c.pickDone.push(s.id);save();
-  return {s:s,fresh:fresh,called:el.length-pool.length+1,total:el.length,pool:el};
+  var c=course();
+  var pool=pickPool(c,curDate(),ui.pick&&ui.pick.sid);
+  return {s:pool.length?pool[Math.floor(Math.random()*pool.length)]:null,pool:pool};
 }
 function startPick(){
-  var r=drawPick();if(!r)return;
+  var c=course();
+  if(!c)return;
+  if(!c.students.length){toast('Der Kurs hat keine Schüler:innen.');return;}
+  if(!curDate()){toast('Bitte oben zuerst ein Datum wählen (nicht „Ohne Datum“).');return;}
+  ui.pick=null;
+  var r=drawPick();
   ui.view={type:'pick'};
-  ui.pick={sid:r.s.id,called:r.called,total:r.total,fresh:r.fresh,rated:null,joker:false,spinning:false};
+  ui.pick={sid:r.s?r.s.id:null,glow:false,spinning:false};
   closeSheet();
-  if(reduceMotion||r.pool.length<2){renderView();return;}
+  if(!r.s||reduceMotion||r.pool.length<2){renderView();return;}
   ui.pick.spinning=true;renderView();
-  var n=0,names=r.pool.map(function(s){return s;}),fn=$('#pickFn'),ln=$('#pickLn');
+  var n=0,names=r.pool,fn=$('#pickFn'),ln=$('#pickLn');
   var timer=setInterval(function(){
     n++;var s=names[Math.floor(Math.random()*names.length)];
     if(fn)fn.textContent=s.first||s.last;if(ln)ln.textContent=s.first?s.last:'';
@@ -1542,16 +1623,28 @@ function startPick(){
   },70);
 }
 function pickView(){
-  var p=ui.pick,c=course(),s=p&&stu(p.sid);
-  if(!s)return vhead('');
-  var jk=jInfoNow(c,s.id);
-  var done=p.rated?'<p class="hint" style="text-align:center;margin-top:10px" role="status">✓ '+esc(p.rated)+' gespeichert</p>':'';
-  return vhead('Zufallsauswahl','<button class="btn text" data-act="closeView">Schließen</button>')+
-    '<div class="vbody"><div class="pickbox"><div class="fnb" id="pickFn">'+esc(s.first||s.last)+'</div><div class="lnb" id="pickLn">'+esc(s.first?s.last:'')+'</div>'+
-    '<div class="runde">'+(p.fresh?'Neue Runde · ':'')+p.called+' von '+p.total+' aufgerufen · '+jk.prog+'/'+jk.every+' Joker-Punkte'+(jk.avail?' · '+jk.avail+' Joker':'')+'</div></div>'+
-    '<div class="sec"><h3>Bewertung</h3><div class="rbtns">'+RATINGS.map(function(r){return '<button class="rbtn '+r.k+'" data-act="prate" data-k="'+r.k+'"'+(p.rated?' disabled':'')+'><span>'+r.sym+'</span><small>'+r.name+'</small></button>';}).join('')+'</div>'+done+'</div>'+
-    '<div class="sec wrap"><button class="act" data-act="pjoker">★ +1 Joker-Punkt</button></div>'+
-    '<div class="sec"><button class="btn primary block big" data-act="pnext">Nächste:r aufrufen</button><div class="row" style="margin-top:12px;justify-content:center"><button class="linkbtn" data-act="presetround">Runde neu starten</button></div></div></div>';
+  var p=ui.pick,c=course(),s=p&&p.sid&&stu(p.sid);
+  var day=curDate(),rated=ratedOn(c,day),skip=roundOf(c,day).skip;
+  var N=c.students.length,nr=c.students.filter(function(x){return rated.has(x.id);}).length;
+  var sk=c.students.filter(function(x){return !rated.has(x.id)&&skip.indexOf(x.id)>=0;}).length;
+  var head=vhead('Heutige Bewertung','<button class="btn text" data-act="closeView">Schließen</button>',undoBtnsHTML());
+  var isT=day===todayStr(),dl=isT?'heute':'am '+fmtDate(day);
+  var prog=nr+' von '+N+' '+dl+' bewertet'+(sk?' · '+sk+' übersprungen':'');
+  if(!s){
+    var more=pickPool(c,day,null).length;
+    return head+'<div class="vbody"><div class="pickbox"><div class="fnb">Fertig</div><div class="lnb">'+(more?'Es sind noch Personen offen.':(isT?'Heute':'Für diesen Tag')+' sind alle bewertet.')+'</div>'+
+      '<div class="runde">'+prog+'</div></div>'+
+      '<div class="sec">'+(more?'<button class="btn primary block big" data-act="pnext">Nächste:r aufrufen</button>':'<button class="btn primary block big" data-act="closeView">Schließen</button>')+'</div></div>';
+  }
+  var jk=jInfoNow(c,s.id),rs=dayEvents(c,s.id,day,'rate').sort(function(a,b){return b.ts-a.ts;}),cur=rs.length?byV(rs[0].val):null;
+  var jn=dayEvents(c,s.id,day,'joker').reduce(function(a,e){return a+(e.n||1);},0);
+  return head+
+    '<div class="vbody"><div class="pickbox'+(cur?' rated '+cur.k:'')+(p.glow?' glow':'')+'"><div class="fnb" id="pickFn">'+esc(s.first||s.last)+'</div><div class="lnb" id="pickLn">'+esc(s.first?s.last:'')+'</div>'+
+    '<div class="runde">'+prog+' · '+jk.prog+'/'+jk.every+' Joker-Punkte'+(jk.avail?' · '+jk.avail+' Joker':'')+'</div></div>'+
+    '<div class="sec"><h3>Bewertung</h3><div class="rbtns">'+RATINGS.map(function(r){var on=cur&&cur.k===r.k;return '<button class="rbtn '+r.k+(on?' on':'')+'" data-act="prate" data-k="'+r.k+'" aria-pressed="'+!!on+'"><span>'+r.sym+'</span><small>'+r.name+'</small></button>';}).join('')+'</div></div>'+
+    '<div class="sec wrap"><button class="act joker'+(jn?' jon':'')+'" data-act="pjoker" aria-pressed="'+!!jn+'">★ Joker-Punkt'+(jn?' · '+jn+' heute':'')+'</button></div>'+
+    '<div class="sec"><button class="btn primary block big" data-act="pnext"'+(cur?'':' disabled')+'>Weiter</button>'+
+    (cur?'':'<div class="row" style="margin-top:12px;justify-content:center"><button class="linkbtn" data-act="pskip">Nicht bewertet (abwesend)</button></div>')+'</div></div>';
 }
 
 /* ───────── Vollbild: Kurs bearbeiten ───────── */
@@ -1888,17 +1981,11 @@ function commitRows(c,rows,added,msg,tab){
     ['val','n','tag','tn','sh'].forEach(function(k){if(e[k]!=null)ev[k]=e[k];});
     return ev;
   });
-  var addIds=added.map(function(s){return s.id;}),evIds=new Set(evs.map(function(e){return e.id;}));
   c.students=c.students.concat(added);
   state.events=state.events.concat(evs);
   state.settings.activeCourse=c.id;
   save();ui.view=null;ui.imp=null;ui.nt=null;ui.tab=tab;if(tab==='eval')ui.range.p='all';renderView();render();window.scrollTo(0,0);
-  toast(evs.length+msg,function(){
-    state.events=state.events.filter(function(e){return !evIds.has(e.id);});
-    var cc=state.courses.filter(function(x){return x.id===c.id;})[0];
-    if(cc)cc.students=cc.students.filter(function(s){return addIds.indexOf(s.id)<0;});
-    save();afterChange();
-  });
+  toast(evs.length+msg,true);
 }
 function importView(){
   var o=ui.imp,courses=state.courses.filter(function(c){return !c.archived;});
@@ -2052,7 +2139,7 @@ function openDetail(sid){closeSheet();ui.view={type:'student',sid:sid};el_scroll
 function el_scrollTop0(){$('#view').scrollTop=0;}
 function newCourse(){
   var used=state.courses.filter(function(c){return !c.archived;}).map(ccol),col=PAL.filter(function(x){return used.indexOf(x)<0;})[0]||PAL[state.courses.length%PAL.length];
-  ui.draft={id:uid(),name:'',subject:'',color:col,jokerEvery:5,students:[],pickDone:[],archived:false,plan:{on:false,rows:4,desks:3,pos:{},init:false}};ui.view={type:'course',isNew:true};closeSheet();el_scrollTop0();renderView();var n=$('#cName');if(n)n.focus();}
+  ui.draft={id:uid(),name:'',subject:'',color:col,jokerEvery:5,students:[],round:{d:'',skip:[]},archived:false,plan:{on:false,rows:4,desks:3,pos:{},init:false}};ui.view={type:'course',isNew:true};closeSheet();el_scrollTop0();renderView();var n=$('#cName');if(n)n.focus();}
 function editCourse(id){
   var c=state.courses.filter(function(x){return x.id===id;})[0];if(!c)return;
   ui.draft=JSON.parse(JSON.stringify(c));ui.view={type:'course',isNew:false};closeSheet();el_scrollTop0();renderView();
@@ -2081,7 +2168,7 @@ function courseSave(){
     var cnt=state.events.filter(function(e){return e.cid===d.id&&!keep.has(e.sid);}).length;
     if(removed.length&&cnt&&!confirm(removed.length+' Schüler:in(nen) entfernen? Alle zugehörigen Einträge ('+cnt+') werden dabei gelöscht.'))return;
     state.events=state.events.filter(function(e){return e.cid!==d.id||keep.has(e.sid);});
-    d.pickDone=(d.pickDone||[]).filter(function(id){return keep.has(id);});
+    d.round={d:(d.round&&d.round.d)||'',skip:((d.round&&d.round.skip)||[]).filter(function(id){return keep.has(id);})};
     applyPlan();
     state.courses[i]=d;
     if(d.archived&&state.settings.activeCourse===d.id)state.settings.activeCourse=null;
@@ -2157,7 +2244,7 @@ function importBackup(file){
       var s=JSON.parse(r.result);
       if(!s||!Array.isArray(s.courses)||!Array.isArray(s.events))throw new Error('format');
       if(!confirm('Sicherung mit '+s.courses.length+' Kurs(en) und '+s.events.length+' Einträgen laden? Die aktuellen Daten auf diesem Gerät werden ersetzt.'))return;
-      state=normalize(s);save();ui.view=null;ui.draft=null;ui.pick=null;ui.stamp=null;renderView();render();toast('Sicherung geladen');
+      state=normalize(s);histReset();save();ui.view=null;ui.draft=null;ui.pick=null;ui.stamp=null;renderView();render();toast('Sicherung geladen');
     }catch(e){alert('Diese Datei ist keine gültige Sicherung.');}
   };
   r.readAsText(file);
@@ -2221,7 +2308,9 @@ var A={
   stampOff:function(){ui.stamp=null;ui.stampReason='';renderDock();},
   cols:function(el){state.settings.cols=+el.dataset.n===3?3:2;save();afterChange();},
   close:function(){closeSheet();},
-  undo:function(){var f=toast.undo;if(f){toast.undo=null;$('#toast').className='';f();}},
+  undo:function(){var f=toast.undo;if(f){toast.undo=null;$('#toast').className='';if(toast.custom)f();else undoStep();}},
+  hundo:undoStep,
+  hredo:redoStep,
   srate:function(el){var sid=ui.sheet.sid;if(doStamp(el.dataset.k,sid)){afterChange();sheetDone();}},
   sjoker:function(el){var sid=ui.sheet.sid;if(doStamp('joker',sid,{reason:el.dataset.r})){afterChange();sheetDone();}},
   sredeem:function(){var sid=ui.sheet.sid;if(doStamp('redeem',sid)){afterChange();sheetDone();}},
@@ -2235,19 +2324,31 @@ var A={
   delev:function(el){removeEvent(el.dataset.id);},
   detail:function(el){openDetail(el.dataset.sid);},
   closeView:function(){closeView();},
-  /* Zufall */
+  /* Heutige Bewertung */
   pick:startPick,
   pnext:function(){
-    var r=drawPick();if(!r)return;
-    ui.pick={sid:r.s.id,called:r.called,total:r.total,fresh:r.fresh,rated:null,spinning:false};renderView();
+    var p=ui.pick;
+    if(p&&p.sid&&!dayEvents(course(),p.sid,curDate(),'rate').length)return;
+    var r=drawPick();
+    ui.pick={sid:r.s?r.s.id:null,glow:false,spinning:false};renderView();
   },
   prate:function(el){
-    var p=ui.pick;if(!p||p.rated)return;
-    var r=RATINGS.filter(function(x){return x.k===el.dataset.k;})[0];
-    if(doStamp(el.dataset.k,p.sid)){p.rated=r.sym+' '+r.name;afterChange();}
+    var p=ui.pick;if(!p||!p.sid)return;
+    if(doStamp(el.dataset.k,p.sid,{replace:true,quiet:true})){buzz();afterChange();}
   },
-  pjoker:function(){var p=ui.pick;if(p&&doStamp('joker',p.sid)){afterChange();}},
-  presetround:function(){var c=course();c.pickDone=ui.pick?[ui.pick.sid]:[];save();if(ui.pick){var el=eligible(c);ui.pick.called=1;ui.pick.total=el.length;ui.pick.fresh=true;}renderView();toast('Neue Runde gestartet');},
+  pjoker:function(){
+    var p=ui.pick,c=course();if(!p||!p.sid)return;
+    var before=jInfoNow(c,p.sid).earned;
+    if(doStamp('joker',p.sid)){p.glow=jInfoNow(c,p.sid).earned>before;afterChange();p.glow=false;}
+  },
+  pskip:function(){
+    var p=ui.pick,c=course();if(!p||!p.sid)return;
+    var rd=roundOf(c,curDate());
+    if(rd.skip.indexOf(p.sid)<0)rd.skip.push(p.sid);
+    save();
+    var r=drawPick();
+    ui.pick={sid:r.s?r.s.id:null,glow:false,spinning:false};afterChange();
+  },
   /* Kurs-Editor */
   addStudent:function(){
     ui.draft.students.push({id:uid(),first:'',last:''});
@@ -2343,7 +2444,7 @@ var A={
   wipe:function(){
     if(!confirm('Wirklich ALLE Kurse, Schüler:innen und Einträge auf diesem Gerät löschen (auch die automatischen Sicherungen)?'))return;
     if(!confirm('Letzte Rückfrage: Das lässt sich nicht rückgängig machen. Alles löschen?'))return;
-    state=defaults();lastSnapKey='';snapClear();save();ui.stamp=null;ui.sel=[];ui.tab='class';ui.view=null;renderView();closeSheet();render();toast('Alle Daten gelöscht');
+    state=defaults();lastSnapKey='';histReset();snapClear();save();ui.stamp=null;ui.sel=[];ui.tab='class';ui.view=null;renderView();closeSheet();render();toast('Alle Daten gelöscht');
   }
 };
 document.addEventListener('click',function(e){
@@ -2438,6 +2539,11 @@ document.addEventListener('paste',function(e){
 document.addEventListener('toggle',function(e){var t=e.target;if(t.dataset&&t.dataset.dk)ui.dopen[t.dataset.dk]=t.open;},true);
 document.addEventListener('keydown',function(e){
   if(e.target.classList&&e.target.classList.contains('cin')){comboKey(e,e.target);return;}
+  if((e.ctrlKey||e.metaKey)&&!e.altKey&&!/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName||'')){
+    var kl=e.key.toLowerCase();
+    if(kl==='z'&&!e.shiftKey){e.preventDefault();undoStep();return;}
+    if(kl==='y'||(kl==='z'&&e.shiftKey)){e.preventDefault();redoStep();return;}
+  }
   if(e.key==='Escape'){if(ui.sheet)closeSheet();else if(ui.view){if(['course','import','nachtrag','pdf'].indexOf(ui.view.type)<0)closeView();}else if(ui.sel.length)selClear('class');else if(ui.stamp)A.stampOff();return;}
   if(!e.ctrlKey&&!e.metaKey&&!e.altKey&&ui.tab==='class'&&!ui.sheet&&!ui.view&&!/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName||'')&&dockVisible()){
     var kk={'1':'r2','2':'r1','3':'r0','4':'rm1','5':'rm2',j:'joker'}[e.key.toLowerCase()];
@@ -2590,12 +2696,12 @@ if(plug('App'))plug('App').addListener('backButton',function(){if(!handleBack())
 /* Installation als App */
 window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();installEvt=e;if(ui.tab==='more'||ui.tab==='class')renderMain();});
 window.addEventListener('appinstalled',function(){installEvt=null;toast('App installiert');render();});
-/* Kurzbefehle vom App-Symbol (?a=nachtragen | zufall) */
+/* Kurzbefehle vom App-Symbol (?a=nachtragen | heute; zufall bleibt als alter Name gültig) */
 (function(){
   var a=(new URLSearchParams(location.search)).get('a');
   if(!a)return;
   try{history.replaceState({m:1},'',location.pathname);}catch(e){}
-  if(a==='nachtragen')openNachtrag();else if(a==='zufall'&&dockVisible())startPick();
+  if(a==='nachtragen')openNachtrag();else if((a==='heute'||a==='zufall')&&dockVisible())startPick();
 })();
 wakeSync();
 setTimeout(checkUpdate,4000);
